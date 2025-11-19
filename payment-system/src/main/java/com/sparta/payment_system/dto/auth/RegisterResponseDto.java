@@ -2,7 +2,6 @@ package com.sparta.payment_system.dto.auth;
 
 import com.sparta.payment_system.entity.MembershipRank;
 import com.sparta.payment_system.entity.User;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter

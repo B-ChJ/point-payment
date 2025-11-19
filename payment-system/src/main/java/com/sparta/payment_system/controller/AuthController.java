@@ -1,7 +1,6 @@
 package com.sparta.payment_system.controller;
 
 import com.sparta.payment_system.dto.auth.RegisterRequestDto;
-import com.sparta.payment_system.dto.auth.LoginResponseDto;
 import com.sparta.payment_system.dto.auth.RegisterResponseDto;
 import com.sparta.payment_system.service.BlacklistService;
 import com.sparta.payment_system.service.AuthService;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
-    private final BlacklistService blacklistService;
 
     @PostMapping("/register")
     public ResponseEntity<RegisterResponseDto> register(@RequestBody RegisterRequestDto request) {
