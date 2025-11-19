@@ -1,7 +1,6 @@
 package com.sparta.payment_system.service;
 
 import com.sparta.payment_system.dto.auth.RegisterRequestDto;
-import com.sparta.payment_system.dto.auth.LoginResponseDto;
 import com.sparta.payment_system.dto.auth.RegisterResponseDto;
 import com.sparta.payment_system.entity.User;
 import com.sparta.payment_system.repository.UserRepository;
