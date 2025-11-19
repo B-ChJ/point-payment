@@ -39,13 +39,13 @@ public class OrderController {
             if (order.getOrderItems() != null && !order.getOrderItems().isEmpty()) {
                 for (OrderItem orderItem : order.getOrderItems()) {
                     // 상품 존재 여부 확인
-                    Optional<Product> productOptional = productRepository.findById(orderItem.getProductId().getProductId());
+                    Optional<Product> productOptional = productRepository.findById(orderItem.getProduct().getProductId());
                     if (productOptional.isEmpty()) {
-                        System.err.println("상품을 찾을 수 없습니다. Product ID: " + orderItem.getProductId());
+                        System.err.println("상품을 찾을 수 없습니다. Product ID: " + orderItem.getProduct().getProductId());
                         return ResponseEntity.badRequest().build();
                     }
                     
-                    orderItem.setOrderId(savedOrder);
+                    orderItem.setOrder(savedOrder);
                     orderItemRepository.save(orderItem);
                 }
                 System.out.println("주문 아이템 " + order.getOrderItems().size() + "개가 저장되었습니다.");
