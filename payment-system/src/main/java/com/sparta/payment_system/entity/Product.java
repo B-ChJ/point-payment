@@ -25,7 +25,7 @@ public class Product {
     @Column(name = "name", nullable = false, length = 255)
     private String name;
     
-    @Column(name = "price", nullable = false, precision = 10, scale = 2)
+    @Column(name ="price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
     
     @Column(name = "stock", nullable = false)
@@ -89,5 +89,9 @@ public class Product {
     // 재고 증가 메서드
     public void increaseStock(int quantity) {
         this.stock += quantity;
+    }
+
+    public enum ProductStatus {
+        ACTIVE,OUT_OF_STOCK,
     }
 }
