@@ -30,7 +30,7 @@ public class ProductController {
     public ResponseEntity<String> healthCheck() {
         return ResponseEntity.ok("Product API is working!");
     }
-    
+
     @PostMapping
     public ResponseEntity<?> createProduct(@RequestBody Product product) {
         try {
@@ -44,7 +44,7 @@ public class ProductController {
             return ResponseEntity.badRequest().body("상품 생성 실패: " + e.getMessage());
         }
     }
-    
+
     @GetMapping
     public ResponseEntity<List<Product>> getAllProducts() {
         try {
@@ -54,7 +54,7 @@ public class ProductController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProduct(@PathVariable Long id) {
         try {
@@ -65,7 +65,7 @@ public class ProductController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
+
     @PutMapping("/{id}")
     public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product productDetails) {
         try {
@@ -91,7 +91,7 @@ public class ProductController {
             return ResponseEntity.badRequest().body(null);
         }
     }
-    
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         try {
@@ -105,7 +105,7 @@ public class ProductController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
+
     @GetMapping("/search")
     public ResponseEntity<List<Product>> searchProducts(@RequestParam String name) {
         try {
@@ -115,10 +115,10 @@ public class ProductController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
+
     @GetMapping("/price-range")
     public ResponseEntity<List<Product>> getProductsByPriceRange(
-            @RequestParam Double minPrice, 
+            @RequestParam Double minPrice,
             @RequestParam Double maxPrice) {
         try {
             List<Product> products = productRepository.findByPriceBetween(minPrice, maxPrice);
@@ -127,7 +127,7 @@ public class ProductController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
+
     @GetMapping("/in-stock")
     public ResponseEntity<List<Product>> getInStockProducts(@RequestParam Integer minStock) {
         try {
@@ -137,7 +137,7 @@ public class ProductController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
+
     // 테스트용 상품 생성 API
     @PostMapping("/test-data")
     public ResponseEntity<String> createTestProducts() {
@@ -146,7 +146,7 @@ public class ProductController {
             if (productRepository.existsById(1L)) {
                 return ResponseEntity.ok("테스트 상품이 이미 존재합니다.");
             }
-            
+
             // 테스트 상품 생성
             Product testProduct = new Product();
             testProduct.setName("스파르타 티셔츠 (화이트, M)");
