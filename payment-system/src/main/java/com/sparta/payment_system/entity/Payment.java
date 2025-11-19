@@ -17,31 +17,41 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class Payment {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_id")
     private Long paymentId;
-    
+
+    //주문정보
     @Column(name = "order_id", nullable = false, length = 255)
     private String orderId;
-    
+
+    //payment_key
+    @Column(name = "payment_key", unique = true, length = 255)
+    private String paymentKey;
+
+    //결제 수단 ID(DB에 저장)
     @Column(name = "method_id")
     private Long methodId;
-    
-    @Column(name = "imp_uid", unique = true, length = 255)
-    private String impUid;
-    
+
+    //사용한 포인트
+    @Column(name = "points_used", precision = 10, scale = 2)
+    private BigDecimal pointsUsed;
+
+    @Column(name = "discount_amount", nullable = false)
+    private BigDecimal discountAmount;
+
+    //금액정보
     @Column(name = "amount", nullable = false, precision = 10, scale = 2)
-    private BigDecimal amount;
-    
+    private BigDecimal Amount;
+
+    //결제 상태
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
     private PaymentStatus status;
-    
-    @Column(name = "payment_method", length = 100)
-    private String paymentMethod;
-    
+
+    //결제 완료 시각
     @Column(name = "paid_at")
     private LocalDateTime paidAt;
     
@@ -51,12 +61,49 @@ public class Payment {
     // @JsonBackReference
     // private Order order;
 
-    
+    //환불 내역
     @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<Refund> refunds;
-    
+
+    //결제 상태
     public enum PaymentStatus {
-        PAID, FAILED, REFUNDED, PARTIALLY_REFUNDED
+        PAID, //결제 완료
+        FAILED, // 결제 실패
+        REFUNDED, //환불
+    }
+
+    //결제 수단
+    public enum PaymentMethod {
+        CARD(1L),
+        BANK_TRANSFER(2L),
+        POINT(3L);
+
+        private final Long id;
+
+        PaymentMethod(Long id) {
+            this.id = id;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        //DB의 methodId를 Enum으로 반환
+        public static PaymentMethod fromId(Long id) {
+            for (PaymentMethod method : values()) {
+                if (method.getId().equals(id)) return method;
+            }
+            throw new IllegalArgumentException("Invalid PaymentMethod ID:" + id);
+        }
+    }
+
+    //DB의 methoID 기반으로 Enum 세팅
+    @Transient
+    private PaymentMethod paymentMethod;
+
+    @PostLoad
+    public void setPaymentMethodEnum() {
+        if (methodId != null) this.paymentMethod = PaymentMethod.fromId(methodId);
     }
 }

@@ -25,9 +25,10 @@ public class Refund {
     @Column(name = "payment_id", nullable = false)
     private Long paymentId;
     
-    @Column(name = "amount", nullable = false, precision = 10, scale = 2)
+    @Column(name = "refund_amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
-    
+
+
     @Column(name = "reason", columnDefinition = "TEXT")
     private String reason;
     
@@ -36,7 +37,7 @@ public class Refund {
     private RefundStatus status;
     
     @CreationTimestamp
-    @Column(name = "refunded_at", nullable = false, updatable = false)
+    @Column(name = "refund_at", nullable = false, updatable = false)
     private LocalDateTime refundedAt;
     
     @ManyToOne(fetch = FetchType.LAZY)
