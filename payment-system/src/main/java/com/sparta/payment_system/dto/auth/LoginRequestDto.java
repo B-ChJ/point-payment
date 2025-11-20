@@ -1,12 +1,9 @@
 package com.sparta.payment_system.dto.auth;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
-public class RegisterRequestDto {
+public class LoginRequestDto {
     private String email;
     private String password;
-    private String name;
 }
