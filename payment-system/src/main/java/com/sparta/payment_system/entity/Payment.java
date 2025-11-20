@@ -20,8 +20,10 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long paymentId;
 
-    @Column(nullable = false)
-    private String orderId;
+    @OneToOne
+    @JoinColumn(name = "order_id")
+    private Order order;
+
 
     @Column(unique = true)
     private String paymentKey;

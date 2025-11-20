@@ -70,7 +70,7 @@ public class OrderController {
     }
     
     @GetMapping("/{orderId}")
-    public ResponseEntity<Order> getOrder(@PathVariable String orderId) {
+    public ResponseEntity<Order> getOrder(@PathVariable Long orderId) {
         try {
             Optional<Order> order = orderRepository.findByOrderId(orderId);
             return order.map(ResponseEntity::ok)
@@ -81,7 +81,7 @@ public class OrderController {
     }
     
     @PutMapping("/{orderId}")
-    public ResponseEntity<Order> updateOrder(@PathVariable String orderId, @RequestBody Order orderDetails) {
+    public ResponseEntity<Order> updateOrder(@PathVariable Long orderId, @RequestBody Order orderDetails) {
         try {
             Optional<Order> orderOptional = orderRepository.findByOrderId(orderId);
             if (orderOptional.isPresent()) {
@@ -101,7 +101,7 @@ public class OrderController {
     }
     
     @DeleteMapping("/{orderId}")
-    public ResponseEntity<Void> deleteOrder(@PathVariable String orderId) {
+    public ResponseEntity<Void> deleteOrder(@PathVariable Long orderId) {
         try {
             Optional<Order> order = orderRepository.findByOrderId(orderId);
             if (order.isPresent()) {

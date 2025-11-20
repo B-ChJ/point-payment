@@ -88,9 +88,9 @@ public class OrderItemController {
     }
 
     @GetMapping("/order/{orderId}")
-    public ResponseEntity<List<OrderItem>> getOrderItemsByOrder(@PathVariable String orderId) {
+    public ResponseEntity<List<OrderItem>> getOrderItemsByOrder(@PathVariable Long orderId) {
         try {
-            List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+            List<OrderItem> orderItems = orderItemRepository.findByOrder_OrderId(orderId);
             return ResponseEntity.ok(orderItems);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
@@ -100,7 +100,7 @@ public class OrderItemController {
     @GetMapping("/product/{productId}")
     public ResponseEntity<List<OrderItem>> getOrderItemsByProduct(@PathVariable Long productId) {
         try {
-            List<OrderItem> orderItems = orderItemRepository.findByProductId(productId);
+            List<OrderItem> orderItems = orderItemRepository.findByProduct_ProductId(productId);
             return ResponseEntity.ok(orderItems);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();

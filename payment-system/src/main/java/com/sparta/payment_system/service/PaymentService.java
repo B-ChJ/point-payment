@@ -5,6 +5,7 @@ import com.sparta.payment_system.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -20,7 +21,7 @@ public class PaymentService {
     private final PointTransactionRepository pointTransactionRepository;
 
     @Transactional
-    public Payment createPayment(String orderId, boolean usePoints) {
+    public Payment createPayment(Long orderId, boolean usePoints) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid orderId"));
         User user = userRepository.findById(order.getUserId())
@@ -35,7 +36,7 @@ public class PaymentService {
         }
 
         Payment payment = new Payment();
-        payment.setOrderId(order.getOrderId());
+        payment.setOrder(order);
         payment.setAmount(totalAmount);
         payment.setPointsUsed(pointsUsed);
         payment.setDiscountAmount(BigDecimal.ZERO);
@@ -107,7 +108,7 @@ public class PaymentService {
         Refund refund = new Refund();
         refund.setPayment(payment);
         refund.setAmount(payment.getAmount());
-        refund.setReason("Webhook Refund");
+        refund.setReason(reason);
         refund.setStatus(Refund.RefundStatus.REQUESTED);
         refundRepository.save(refund);
 
@@ -116,6 +117,7 @@ public class PaymentService {
 
         User user = getUserByPayment(payment);
 
+        // 포인트 복구
         if (payment.getPointsUsed().compareTo(BigDecimal.ZERO) > 0) {
             user.setTotalPoints(user.getTotalPoints().add(payment.getPointsUsed()));
             userRepository.save(user);
@@ -131,6 +133,53 @@ public class PaymentService {
         return refund;
     }
 
+    /**
+     * PortOne 환불용: paymentKey 기준, Mono<Boolean> 반환
+     */
+    @Transactional
+    public Mono<Boolean> cancelPayment(String paymentKey, String reason) {
+        try {
+            Payment payment = paymentRepository.findByPaymentKey(paymentKey)
+                    .orElseThrow(() -> new IllegalArgumentException("Invalid paymentKey"));
+
+            if (payment.getStatus() != Payment.PaymentStatus.PAID) {
+                return Mono.just(false);
+            }
+
+            // 환불 처리
+            Refund refund = new Refund();
+            refund.setPayment(payment);
+            refund.setAmount(payment.getAmount());
+            refund.setReason(reason);
+            refund.setStatus(Refund.RefundStatus.COMPLETED);
+            refundRepository.save(refund);
+
+            // 결제 상태 변경
+            payment.setStatus(Payment.PaymentStatus.REFUNDED);
+            paymentRepository.save(payment);
+
+            // 포인트 복구
+            User user = getUserByPayment(payment);
+            if (payment.getPointsUsed().compareTo(BigDecimal.ZERO) > 0) {
+                user.setTotalPoints(user.getTotalPoints().add(payment.getPointsUsed()));
+                userRepository.save(user);
+
+                PointTransaction transaction = new PointTransaction();
+                transaction.setUser(user);
+                transaction.setPointsChanged(payment.getPointsUsed());
+                transaction.setType(PointTransaction.PointType.EARNED);
+                transaction.setCreatedAt(LocalDateTime.now());
+                pointTransactionRepository.save(transaction);
+            }
+
+            return Mono.just(true);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Mono.just(false);
+        }
+    }
+
     @Transactional(readOnly = true)
     public Payment getPayment(Long paymentId) {
         return paymentRepository.findById(paymentId)
@@ -144,8 +193,8 @@ public class PaymentService {
     }
 
     private User getUserByPayment(Payment payment) {
-        Order order = orderRepository.findById(payment.getOrderId())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid orderId"));
+        Order order = payment.getOrder();
+        if (order == null) throw new IllegalArgumentException("Payment has no associated order");
         return userRepository.findById(order.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid userId"));
     }
@@ -168,6 +217,7 @@ public class PaymentService {
         userRepository.save(user);
     }
 }
+
 
 
 
