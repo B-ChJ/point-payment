@@ -1,6 +1,7 @@
 package com.sparta.payment_system.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -47,6 +48,14 @@ public class Product {
     private LocalDateTime updatedAt;
 
     private Integer minStockAlert = 5;
+
+    @Builder
+    public Product(String name, BigDecimal price, Integer stock, String description) {
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        this.description = description;
+    }
 
     public enum ProductStatus {
         ACTIVE("판매중"),
