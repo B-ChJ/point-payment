@@ -46,6 +46,6 @@ public class Refund {
     private Payment payment;
     
     public enum RefundStatus {
-        COMPLETED, FAILED
+        REQUESTED , COMPLETED, FAILED
     }
 }
