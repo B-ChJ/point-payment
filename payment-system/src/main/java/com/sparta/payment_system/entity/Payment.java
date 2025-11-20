@@ -20,10 +20,10 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long paymentId;
 
-    @Column(name = "order_id", nullable = false, length = 255)
+    @OneToOne
+    @JoinColumn(name = "order_id")
+    private Order order;
 
-    @Column(nullable = false)
-    private String orderId;
 
     @Column(name = "method_id")
 
@@ -32,13 +32,6 @@ public class Payment {
 
     @Column
     private Long methodId;
-
-    @Column(name = "imp_uid", unique = true, length = 255)
-    private String impUid;
-
-    @Column(name = "amount", nullable = false, precision = 10, scale = 2)
-    private BigDecimal amount;
-
 
     @Column(precision = 19, scale = 2)
     private BigDecimal pointsUsed = BigDecimal.ZERO;
@@ -53,21 +46,12 @@ public class Payment {
     @Column(nullable = false)
     private PaymentStatus status;
 
-    @Column(name = "payment_method", length = 100)
-    private String paymentMethod;
-
-    @Column(name = "paid_at")
-
     private LocalDateTime paidAt;
-
 
     @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Refund> refunds;
 
-
     public enum PaymentStatus {
-        PAID, FAILED, REFUNDED, PARTIALLY_REFUNDED
-    }
         PAID, FAILED, REFUNDED
     }
 

@@ -17,8 +17,5 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     
     // 새로 추가된 메서드들
     List<Product> findByStatus(Product.ProductStatus status);
-    
-    List<Product> findByCategory(String category);
-    
-    List<Product> findByStockLessThanEqual(Integer stock);
+
 }

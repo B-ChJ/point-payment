@@ -18,7 +18,7 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class Order {
-    
+
     @Id
     @Column(name = "order_id", length = 255)
     private String orderId;
@@ -36,16 +36,15 @@ public class Order {
     @CreationTimestamp
     @Column(name = "ordered_at", nullable = false, updatable = false)
     private LocalDateTime orderedAt;
-    
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<OrderItem> orderItems = new ArrayList<>();
-    
-    // 외래키 제약조건 문제를 방지하기 위해 일시적으로 주석 처리
-    // @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    // @JsonManagedReference
-    // private Payment payment;
-    
+
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private Payment payment;
+
     public enum OrderStatus {
         PENDING_PAYMENT, COMPLETED, CANCELLED
     }

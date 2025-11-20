@@ -25,7 +25,7 @@ public class PaymentController {
      */
     @PostMapping("/orders/{orderId}/payments")
     public ResponseEntity<Payment> createPayment(
-            @PathVariable String orderId,
+            @PathVariable Long orderId,
             @RequestParam(required = false) boolean usePoints) {
 
         Payment payment = paymentService.createPayment(orderId, usePoints);
