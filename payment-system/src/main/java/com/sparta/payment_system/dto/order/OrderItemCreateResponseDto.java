@@ -1,7 +1,6 @@
 package com.sparta.payment_system.dto.order;
 
 import com.sparta.payment_system.entity.OrderItem;
-import com.sparta.payment_system.entity.Product;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
