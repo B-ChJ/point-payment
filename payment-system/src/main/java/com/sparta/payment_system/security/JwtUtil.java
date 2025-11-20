@@ -25,7 +25,7 @@ public class JwtUtil {
     private final SecretKey key;
     private final long accessExpiration;
     private final long refreshExpiration;
-    private BlacklistRepository blacklistRepository;
+    private final BlacklistRepository blacklistRepository;
 
     public JwtUtil(@Value("${jwt.secret.key}") String secretKey,
                    @Value("${jwt.token-validity-in-seconds}") long expiration,
@@ -72,7 +72,6 @@ public class JwtUtil {
 
     /**
      * JWT 토큰에서 인증 정보를 추출합니다.
-     * <p>
      * Controller에서 (@AuthenticationPrincipal CustomUserDetails user)와 같이 인증된 사용자 정보를
      * 가져와 활용하시면 됩니다.
      */
@@ -103,7 +102,7 @@ public class JwtUtil {
             Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
             return true;
         } catch (Exception e) {
-            System.out.println("유효하지 않은 Token: {}" + e.getMessage());
+            System.out.println("유효하지 않은 Token: " + e.getMessage());
             return false;
         }
     }
@@ -111,15 +110,15 @@ public class JwtUtil {
         try {
             Jws<Claims> claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
 
-            if (claims.getPayload().getExpiration().before(new Date())) {
+            if(claims.getPayload().getExpiration().before(new Date())) {
                 return false;
             }
-            if (blacklistRepository.existsByToken(token)) {
+            if(blacklistRepository.existsByToken(token)) {
                 return false;
             }
             return true;
         } catch (Exception e) {
-            System.out.println("유효하지 않은 Token: {}" + e.getMessage());
+            System.out.println("유효하지 않은 Token: " + e.getMessage());
             return false;
         }
     }
