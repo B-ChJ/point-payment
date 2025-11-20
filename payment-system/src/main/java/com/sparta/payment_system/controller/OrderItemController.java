@@ -13,14 +13,14 @@ import java.util.Optional;
 @RequestMapping("/api/order-items")
 @CrossOrigin(origins = "*")
 public class OrderItemController {
-    
+
     private final OrderItemRepository orderItemRepository;
-    
+
     @Autowired
     public OrderItemController(OrderItemRepository orderItemRepository) {
         this.orderItemRepository = orderItemRepository;
     }
-    
+
     @PostMapping
     public ResponseEntity<OrderItem> createOrderItem(@RequestBody OrderItem orderItem) {
         try {
@@ -30,7 +30,7 @@ public class OrderItemController {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     @GetMapping
     public ResponseEntity<List<OrderItem>> getAllOrderItems() {
         try {
@@ -40,7 +40,7 @@ public class OrderItemController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<OrderItem> getOrderItem(@PathVariable Long id) {
         try {
@@ -51,7 +51,7 @@ public class OrderItemController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
+
     @PutMapping("/{id}")
     public ResponseEntity<OrderItem> updateOrderItem(@PathVariable Long id, @RequestBody OrderItem orderItemDetails) {
         try {
@@ -62,7 +62,7 @@ public class OrderItemController {
                 orderItem.setProductId(orderItemDetails.getProductId());
                 orderItem.setQuantity(orderItemDetails.getQuantity());
                 orderItem.setPrice(orderItemDetails.getPrice());
-                
+
                 OrderItem updatedOrderItem = orderItemRepository.save(orderItem);
                 return ResponseEntity.ok(updatedOrderItem);
             } else {
@@ -72,7 +72,7 @@ public class OrderItemController {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrderItem(@PathVariable Long id) {
         try {
@@ -86,7 +86,7 @@ public class OrderItemController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
+
     @GetMapping("/order/{orderId}")
     public ResponseEntity<List<OrderItem>> getOrderItemsByOrder(@PathVariable String orderId) {
         try {
@@ -96,7 +96,7 @@ public class OrderItemController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
+
     @GetMapping("/product/{productId}")
     public ResponseEntity<List<OrderItem>> getOrderItemsByProduct(@PathVariable Long productId) {
         try {

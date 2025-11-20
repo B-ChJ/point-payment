@@ -91,4 +91,6 @@ public class Product {
         this.stock += quantity;
     }
 
+    }
+
 }
