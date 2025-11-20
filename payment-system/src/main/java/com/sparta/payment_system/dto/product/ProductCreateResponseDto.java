@@ -6,7 +6,7 @@ import lombok.Getter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-
+@Getter
 public class ProductCreateResponseDto {
 
     private final Long productId; // 상품아이디

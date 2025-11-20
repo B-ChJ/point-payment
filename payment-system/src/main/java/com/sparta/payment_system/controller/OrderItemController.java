@@ -1,8 +1,12 @@
 package com.sparta.payment_system.controller;
 
+import com.sparta.payment_system.dto.order.OrderItemCreateRequestDto;
+import com.sparta.payment_system.dto.order.OrderItemCreateResponseDto;
 import com.sparta.payment_system.entity.OrderItem;
 import com.sparta.payment_system.repository.OrderItemRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.sparta.payment_system.service.OrderItemService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,23 +16,17 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/order-items")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class OrderItemController {
 
+    private final OrderItemService orderItemService;
     private final OrderItemRepository orderItemRepository;
 
-    @Autowired
-    public OrderItemController(OrderItemRepository orderItemRepository) {
-        this.orderItemRepository = orderItemRepository;
-    }
 
-    @PostMapping
-    public ResponseEntity<OrderItem> createOrderItem(@RequestBody OrderItem orderItem) {
-        try {
-            OrderItem savedOrderItem = orderItemRepository.save(orderItem);
-            return ResponseEntity.ok(savedOrderItem);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
+    @PostMapping("/{productId}")
+    public ResponseEntity<OrderItemCreateResponseDto> createOrderItem(@PathVariable Long productId, @Valid @RequestBody OrderItemCreateRequestDto requestDto) {
+        OrderItemCreateResponseDto savedOrderItem = orderItemService.createOrderItem(1L, productId, requestDto);
+        return ResponseEntity.ok(savedOrderItem);
     }
 
     @GetMapping
