@@ -23,22 +23,10 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/register")
-    public ResponseEntity<RegisterResponseDto> register(@RequestBody RegisterRequestDto request,
-                                                        HttpServletResponse response) {
-        TokenResponseDto result = authService.register(request);
+    public ResponseEntity<RegisterResponseDto> register(@RequestBody RegisterRequestDto request) {
+        RegisterResponseDto result = authService.register(request);
 
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", result.getRefreshToken())
-                .httpOnly(true)
-                .secure(false) //http 접근 가능하게
-                .sameSite("Lax") // Lax?? Strict??
-                .path("/")
-                .maxAge(Duration.ofDays(7))
-                .build();
-
-        response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + result.getAccessToken());
-        response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(new RegisterResponseDto(result.getUser()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     @PostMapping("/login")
@@ -48,8 +36,8 @@ public class AuthController {
 
         ResponseCookie cookie = ResponseCookie.from("refreshToken", result.getRefreshToken())
                 .httpOnly(true)
-                .secure(false) //http 접근 가능하게
-                .sameSite("Lax") // Lax?? Strict??
+                .secure(false)
+                .sameSite("Lax")
                 .path("/")
                 .maxAge(Duration.ofDays(7))
                 .build();
@@ -57,7 +45,8 @@ public class AuthController {
         response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + result.getAccessToken());
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        return ResponseEntity.status(HttpStatus.OK).body(new LoginResponseDto(result.getUser()));
+        return ResponseEntity.status(HttpStatus.OK).body(
+                new LoginResponseDto(result.getUser()));
     }
 
 
