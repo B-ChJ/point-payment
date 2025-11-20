@@ -5,7 +5,9 @@ import com.sparta.payment_system.dto.product.ProductCreateResponseDto;
 import com.sparta.payment_system.entity.Product;
 import com.sparta.payment_system.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
+@Service
 @RequiredArgsConstructor
 public class ProductService {
 
