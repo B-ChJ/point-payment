@@ -27,6 +27,15 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        String path = request.getServletPath();
+
+        if (path.equals("/login.html") || path.equals("/register.html") || path.equals("/point-payment.html")
+                || path.startsWith("/api/auth/login") || path.startsWith("/api/auth/register")
+                || path.startsWith("/api/product")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         String accessToken = resolveAccessToken(request);
 
         //AccessToken Filter
@@ -42,6 +51,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 }
             else {
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
             }
         }
 
