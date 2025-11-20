@@ -25,7 +25,7 @@ public class Product {
     @Column(name = "name", nullable = false, length = 255)
     private String name;
     
-    @Column(name ="price", nullable = false, precision = 10, scale = 2)
+    @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
     
     @Column(name = "stock", nullable = false)
@@ -37,7 +37,13 @@ public class Product {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private ProductStatus status = ProductStatus.ACTIVE;
-
+    
+    @Column(name = "min_stock_alert", nullable = false)
+    private Integer minStockAlert = 5;
+    
+    @Column(name = "category", length = 100)
+    private String category;
+    
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -45,9 +51,7 @@ public class Product {
     @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
-
-    private Integer minStockAlert = 5;
-
+    
     public enum ProductStatus {
         ACTIVE("판매중"),
         OUT_OF_STOCK("품절"),
@@ -86,5 +90,4 @@ public class Product {
     public void increaseStock(int quantity) {
         this.stock += quantity;
     }
-
 }

@@ -19,22 +19,27 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_item_id")
     private Long orderItemId;
-
-    @Column(name = "name", nullable = false)
-    private String name;
-
+    
+    @Column(name = "order_id", nullable = false, length = 255)
+    private String orderId;
+    
+    @Column(name = "product_id", nullable = false)
+    private Long productId;
+    
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
     
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
-
+    
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id")
+    @JoinColumn(name = "order_id", insertable = false, updatable = false)
     @JsonBackReference
     private Order order;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id")
-    private Product product;
+    
+    // 외래키 제약조건 문제를 방지하기 위해 일시적으로 주석 처리
+    // @ManyToOne(fetch = FetchType.LAZY)
+    // @JoinColumn(name = "product_id", insertable = false, updatable = false)
+    // @JsonBackReference
+    // private Product product;
 }
