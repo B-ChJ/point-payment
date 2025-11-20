@@ -1,7 +1,7 @@
 package com.sparta.payment_system.controller;
 
 import com.sparta.payment_system.service.PaymentService;
-import com.sparta.payment_system.dto.payment.PaymentRequestDto;
+import com.sparta.payment_system.dto.PaymentRequestDto;
 import com.sparta.payment_system.entity.Order;
 import com.sparta.payment_system.entity.OrderItem;
 import com.sparta.payment_system.entity.Payment;
