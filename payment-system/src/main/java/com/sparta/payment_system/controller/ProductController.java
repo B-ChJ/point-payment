@@ -16,7 +16,7 @@ import java.util.Optional;
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 public class ProductController {
-    
+
     private final ProductRepository productRepository;
     private final StockService stockService;
 
