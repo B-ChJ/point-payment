@@ -21,8 +21,8 @@ public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "order_id", length = 255)
-    private String orderId;
+    @Column(name = "order_id")
+    private Long orderId;
     
     @Column(name = "user_id", nullable = false)
     private Long userId;
@@ -35,8 +35,8 @@ public class Order {
     private OrderStatus status = OrderStatus.PENDING_PAYMENT;
     
     @CreationTimestamp
-    @Column(name = "ordered_at", nullable = false, updatable = false)
-    private LocalDateTime orderedAt;
+    @Column(name = "created_at",nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
@@ -48,7 +48,6 @@ public class Order {
     }
 
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
     private Payment payment;
 
     public enum OrderStatus {
