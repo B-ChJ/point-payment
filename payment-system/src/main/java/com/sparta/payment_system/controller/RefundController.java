@@ -49,8 +49,7 @@ public class RefundController {
             Payment payment = paymentOptional.get();
             
             // 2. 환불 가능 상태 확인
-            if (payment.getStatus() != Payment.PaymentStatus.PAID && 
-                payment.getStatus() != Payment.PaymentStatus.PARTIALLY_REFUNDED) {
+            if (payment.getStatus() != Payment.PaymentStatus.PAID){
                 return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body("환불할 수 없는 결제 상태입니다. 현재 상태: " + payment.getStatus()));
             }
@@ -69,7 +68,7 @@ public class RefundController {
             // 5. PortOne API로 환불 요청
             final String reason = refundRequest.getReason() != null ? refundRequest.getReason() : "사용자 요청에 의한 환불";
             
-            return paymentService.cancelPayment(payment.getImpUid(), reason)
+            return paymentService.cancelPayment(payment.getPaymentKey(), reason)
                     .map(isSuccess -> {
                         if (isSuccess) {
                             // 6. 환불 성공 시 DB에 환불 정보 저장
