@@ -7,12 +7,14 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class LoginResponseDto {
+    private final String token;
     private final String email;
     private final Long userId;
     private final String name;
     private final String membershipRank;
 
-    public LoginResponseDto(User user) {
+    public LoginResponseDto(String token, User user) {
+        this.token = token;
         this.email = user.getEmail();
         this.userId = user.getUserId();
         this.name = user.getName();

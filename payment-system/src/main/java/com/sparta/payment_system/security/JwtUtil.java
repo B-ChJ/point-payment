@@ -1,18 +1,16 @@
 package com.sparta.payment_system.security;
 
 import com.sparta.payment_system.repository.BlacklistRepository;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import java.util.Arrays;
@@ -101,7 +99,10 @@ public class JwtUtil {
         try {
             Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
             return true;
-        } catch (Exception e) {
+        } catch (ExpiredJwtException e) {
+            System.out.println("만료된 Token: " + e.getMessage());
+            return false;
+        } catch (JwtException e) {
             System.out.println("유효하지 않은 Token: " + e.getMessage());
             return false;
         }
@@ -114,6 +115,7 @@ public class JwtUtil {
                 return false;
             }
             if(blacklistRepository.existsByToken(token)) {
+                System.out.println("로그아웃 이력이 있습니다. 다시 로그인 해주세요.");
                 return false;
             }
             return true;
@@ -121,5 +123,17 @@ public class JwtUtil {
             System.out.println("유효하지 않은 Token: " + e.getMessage());
             return false;
         }
+    }
+
+    public String resolveAccessToken(String bearerToken) {
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
+    }
+
+    public String resolveRefreshToken(String token) {
+        // "/api/auth/refresh" 구현 과정에 사용 예정
+        return null;
     }
 }
