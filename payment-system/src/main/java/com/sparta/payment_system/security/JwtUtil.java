@@ -130,15 +130,10 @@ public class JwtUtil {
         }
     }
 
-    public String resolveAccessToken(String bearerToken) {
+    public String resolveToken(String bearerToken) {
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
             return bearerToken.substring(7);
         }
-        return null;
-    }
-
-    public String resolveRefreshToken(String token) {
-        // "/api/auth/refresh" 구현 과정에 사용 예정
         return null;
     }
 }

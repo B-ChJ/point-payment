@@ -58,7 +58,9 @@ public class AuthService {
         return new TokenResponseDto(accessToken, refreshToken, user);
     }
 
-    public RefreshResponseDto refresh(String token) {
+    public RefreshResponseDto refresh(String refreshToken) {
+        String token = jwtUtil.resolveToken(refreshToken);
+
         if (token != null && jwtUtil.validateRefreshToken(token)) {
             String newAccessToken = jwtUtil.createAccessToken(jwtUtil.getAuthentication(token));
             return new RefreshResponseDto(newAccessToken);
