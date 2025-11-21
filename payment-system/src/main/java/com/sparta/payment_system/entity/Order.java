@@ -20,7 +20,8 @@ import java.util.List;
 public class Order {
 
     @Id
-    @Column(name = "order_id", length = 255)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "order_id")
     private Long orderId;
     
     @Column(name = "user_id", nullable = false)
@@ -31,7 +32,7 @@ public class Order {
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
-    private OrderStatus status;
+    private OrderStatus status = OrderStatus.PENDING_PAYMENT;
     
     @CreationTimestamp
     @Column(name = "created_at",nullable = false, updatable = false)
@@ -40,6 +41,11 @@ public class Order {
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<OrderItem> orderItems = new ArrayList<>();
+
+    public Order(Long userId, BigDecimal totalAmount) {
+        this.userId = userId;
+        this.totalAmount = totalAmount;
+    }
 
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Payment payment;

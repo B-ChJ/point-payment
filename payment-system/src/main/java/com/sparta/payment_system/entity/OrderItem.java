@@ -37,4 +37,12 @@ public class OrderItem {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     private Product product;
+
+    public OrderItem(String name, Integer quantity, BigDecimal price,Order order, Product product) {
+        this.name = name;
+        this.quantity = quantity;
+        this.price = price;
+        this.order = order;
+        this.product = product;
+    }
 }
