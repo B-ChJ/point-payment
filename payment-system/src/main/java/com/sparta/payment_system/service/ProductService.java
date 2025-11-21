@@ -2,6 +2,7 @@ package com.sparta.payment_system.service;
 
 import com.sparta.payment_system.dto.product.ProductCreateRequestDto;
 import com.sparta.payment_system.dto.product.ProductCreateResponseDto;
+import com.sparta.payment_system.dto.product.ProductDetailResponseDto;
 import com.sparta.payment_system.entity.Product;
 import com.sparta.payment_system.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,5 +26,14 @@ public class ProductService {
         productRepository.save(product);
 
         return ProductCreateResponseDto.from(product);
+    }
+
+    public ProductDetailResponseDto getProduct(Long productId) {
+
+        Product product = productRepository.findById(productId).orElseThrow(
+                ()-> new IllegalStateException("not found productId")
+        );
+
+        return ProductDetailResponseDto.from(product);
     }
 }
