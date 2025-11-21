@@ -1,6 +1,8 @@
 package com.sparta.payment_system.security;
 
+import com.sparta.payment_system.entity.User;
 import com.sparta.payment_system.repository.BlacklistRepository;
+import com.sparta.payment_system.repository.UserRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -8,7 +10,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -24,15 +25,18 @@ public class JwtUtil {
     private final long accessExpiration;
     private final long refreshExpiration;
     private final BlacklistRepository blacklistRepository;
+    private final UserRepository userRepository;
 
     public JwtUtil(@Value("${jwt.secret.key}") String secretKey,
                    @Value("${jwt.token-validity-in-seconds}") long expiration,
-                   BlacklistRepository blacklistRepository) {
+                   BlacklistRepository blacklistRepository,
+                   UserRepository userRepository) {
         this.key = Keys.hmacShaKeyFor(secretKey.getBytes());
         this.accessExpiration = expiration * 1000; //밀리초 변환 - 1시간
         this.refreshExpiration = expiration * 24 * 7 * 1000; //밀리초 변환 - 7일
 
         this.blacklistRepository = blacklistRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -84,9 +88,10 @@ public class JwtUtil {
                 Arrays.stream(claims.get("auth", String.class).split(","))
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
+        User user = userRepository.findById(Long.valueOf(claims.getSubject())).orElseThrow(
+                () -> new IllegalStateException("존재하지 않는 사용자입니다."));
 
-        org.springframework.security.core.userdetails.User principal =
-                new User(claims.getSubject(), "", authorities);
+        CustomUserDetails principal = new CustomUserDetails(user);
 
         return new UsernamePasswordAuthenticationToken(principal, token, authorities);
     }

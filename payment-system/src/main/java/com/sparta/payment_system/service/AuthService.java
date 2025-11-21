@@ -23,7 +23,7 @@ public class AuthService {
 
     @Transactional
     public RegisterResponseDto register(RegisterRequestDto request) {
-        if(userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("이미 존재하는 이메일입니다.");
         }
         String passwordHash = passwordEncoder.encode(request.getPassword());
@@ -58,17 +58,12 @@ public class AuthService {
         return new TokenResponseDto(accessToken, refreshToken, user);
     }
 
-    public RefreshResponseDto refresh(RefreshRequestDto request) {
-//        if(request.getCookies() != null) {
-//            for(Cookie cookie : request.getCookies()) {
-//                if(StringUtils.hasText(cookie.getName()) && cookie.getName().equals("refreshToken")) {
-//                    return cookie.getValue();
-//                }
-//            }}
-        if (request.getRefreshToken() != null && jwtUtil.validateRefreshToken(request.getRefreshToken())) {
-            String newAccessToken = jwtUtil.createAccessToken(jwtUtil.getAuthentication(request.getRefreshToken()));
+    public RefreshResponseDto refresh(String token) {
+        if (token != null && jwtUtil.validateRefreshToken(token)) {
+            String newAccessToken = jwtUtil.createAccessToken(jwtUtil.getAuthentication(token));
             return new RefreshResponseDto(newAccessToken);
         }
+
         return null;
     }
 }
