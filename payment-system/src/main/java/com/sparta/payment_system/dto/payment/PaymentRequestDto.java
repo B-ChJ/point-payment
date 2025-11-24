@@ -24,18 +24,11 @@ public class PaymentRequestDto {
     // 결제 정보
     private String paymentMethod;
     private String impUid;
-
-    // 포인트 관련
-    private boolean usePoint;
-    private BigDecimal usePointAmount;
     
     // 사용자 정보 (선택적)
     private String customerName;
     private String customerEmail;
     private String customerPhone;
-
-    //맴버심 등급 정보
-    private String currentMembershipRank;
     
     @Getter
     @Setter
