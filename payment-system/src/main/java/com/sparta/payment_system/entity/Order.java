@@ -18,10 +18,11 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class Order {
-    
+
     @Id
-    @Column(name = "order_id", length = 255)
-    private String orderId;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "order_id")
+    private Long orderId;
     
     @Column(name = "user_id", nullable = false)
     private Long userId;
@@ -31,21 +32,24 @@ public class Order {
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
-    private OrderStatus status;
+    private OrderStatus status = OrderStatus.PENDING_PAYMENT;
     
     @CreationTimestamp
-    @Column(name = "ordered_at", nullable = false, updatable = false)
-    private LocalDateTime orderedAt;
-    
+    @Column(name = "created_at",nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<OrderItem> orderItems = new ArrayList<>();
-    
-    // 외래키 제약조건 문제를 방지하기 위해 일시적으로 주석 처리
-    // @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    // @JsonManagedReference
-    // private Payment payment;
-    
+
+    public Order(Long userId, BigDecimal totalAmount) {
+        this.userId = userId;
+        this.totalAmount = totalAmount;
+    }
+
+    @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Payment payment;
+
     public enum OrderStatus {
         PENDING_PAYMENT, COMPLETED, CANCELLED
     }

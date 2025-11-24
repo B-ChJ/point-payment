@@ -1,4 +1,4 @@
-package com.sparta.payment_system.dto;
+package com.sparta.payment_system.dto.payment;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
