@@ -28,9 +28,4 @@ public class BlacklistService {
 
         return LogoutResponseDto.save(true);
     }
-
-    public boolean isBlacklisted(String refreshToken) {
-        return blacklistRepository.existsByToken(refreshToken);
-    }
-
 }

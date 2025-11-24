@@ -3,7 +3,6 @@ package com.sparta.payment_system.service;
 import com.sparta.payment_system.dto.auth.*;
 import com.sparta.payment_system.entity.MembershipRank;
 import com.sparta.payment_system.entity.User;
-import com.sparta.payment_system.repository.BlacklistRepository;
 import com.sparta.payment_system.repository.UserRepository;
 import com.sparta.payment_system.security.CustomUserDetails;
 import com.sparta.payment_system.security.JwtUtil;
@@ -21,7 +20,6 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
-    private final BlacklistRepository blacklistRepository;
 
     @Transactional
     public RegisterResponseDto register(RegisterRequestDto request) {
