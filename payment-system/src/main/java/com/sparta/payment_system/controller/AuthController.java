@@ -36,8 +36,8 @@ public class AuthController {
                                                   HttpServletResponse response) {
         TokenResponseDto result = authService.login(request);
 
-        String accessToken = "Bearer " + result.getAccessToken();
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", "Bearer " + result.getRefreshToken())
+        String accessToken = result.getAccessToken();
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", result.getRefreshToken())
                 .httpOnly(true)
                 .secure(false)
                 .sameSite("Lax")
