@@ -10,14 +10,14 @@ import java.util.Optional;
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, Long> {
     
-    Optional<Payment> findByOrderId(String orderId);
-    
-    Optional<Payment> findByImpUid(String impUid);
+    Optional<Payment> findByOrder_OrderId(Long orderId);
+
+
+    Optional<Payment> findByPaymentKey(String paymentKey);
     
     List<Payment> findByStatus(Payment.PaymentStatus status);
     
     List<Payment> findByMethodId(Long methodId);
 
-    //  신규 추가 부분
-    List<Payment> findByOrderIdInAndStatus(List<String> orderIds, Payment.PaymentStatus status);
+    List<Payment> findAllByOrderUserId(Long userId);
 }

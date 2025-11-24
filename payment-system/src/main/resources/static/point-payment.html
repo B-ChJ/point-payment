@@ -1073,8 +1073,8 @@
     // 결제 처리
     async function processPayment() {
         if (!USER_ID) {
-            showResult('error', '❌ 인증 필요', '로그인이 필요합니다.');
-            return;
+       //     showResult('error', '❌ 인증 필요', '로그인이 필요합니다.');
+       //     return;
         }
 
         const orderId = document.getElementById('orderId').value;
@@ -1273,10 +1273,10 @@
 
     // 주문 조회
     async function checkOrder() {
-        if (!USER_ID) {
-            showResult('error', '❌ 인증 필요', '로그인이 필요합니다.');
-            return;
-        }
+       // if (!USER_ID) {
+       //     showResult('error', '❌ 인증 필요', '로그인이 필요합니다.');
+       //     return;
+       // }
 
         const orderId = document.getElementById('orderId').value;
 

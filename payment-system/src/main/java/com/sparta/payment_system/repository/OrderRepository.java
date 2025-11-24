@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface OrderRepository extends JpaRepository<Order, String> {
+public interface OrderRepository extends JpaRepository<Order, Long> {
     
     List<Order> findByUserId(Long userId);
     
@@ -16,5 +16,5 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     
     List<Order> findByUserIdAndStatus(Long userId, Order.OrderStatus status);
     
-    Optional<Order> findByOrderId(String orderId);
+    Optional<Order> findByOrderId(Long orderId);
 }

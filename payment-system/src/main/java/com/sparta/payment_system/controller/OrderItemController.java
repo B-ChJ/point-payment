@@ -2,7 +2,7 @@ package com.sparta.payment_system.controller;
 
 import com.sparta.payment_system.entity.OrderItem;
 import com.sparta.payment_system.repository.OrderItemRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,25 +12,11 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/api/order-items")
 @CrossOrigin(origins = "*")
+@RequiredArgsConstructor
 public class OrderItemController {
-    
+
     private final OrderItemRepository orderItemRepository;
-    
-    @Autowired
-    public OrderItemController(OrderItemRepository orderItemRepository) {
-        this.orderItemRepository = orderItemRepository;
-    }
-    
-    @PostMapping
-    public ResponseEntity<OrderItem> createOrderItem(@RequestBody OrderItem orderItem) {
-        try {
-            OrderItem savedOrderItem = orderItemRepository.save(orderItem);
-            return ResponseEntity.ok(savedOrderItem);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
-    
+
     @GetMapping
     public ResponseEntity<List<OrderItem>> getAllOrderItems() {
         try {
@@ -40,7 +26,7 @@ public class OrderItemController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
+
     @GetMapping("/{id}")
     public ResponseEntity<OrderItem> getOrderItem(@PathVariable Long id) {
         try {
@@ -51,18 +37,18 @@ public class OrderItemController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
+
     @PutMapping("/{id}")
     public ResponseEntity<OrderItem> updateOrderItem(@PathVariable Long id, @RequestBody OrderItem orderItemDetails) {
         try {
             Optional<OrderItem> orderItemOptional = orderItemRepository.findById(id);
             if (orderItemOptional.isPresent()) {
                 OrderItem orderItem = orderItemOptional.get();
-                orderItem.setOrderId(orderItemDetails.getOrderId());
-                orderItem.setProductId(orderItemDetails.getProductId());
+                orderItem.setOrder(orderItemDetails.getOrder());
+                orderItem.setProduct(orderItemDetails.getProduct());
                 orderItem.setQuantity(orderItemDetails.getQuantity());
                 orderItem.setPrice(orderItemDetails.getPrice());
-                
+
                 OrderItem updatedOrderItem = orderItemRepository.save(orderItem);
                 return ResponseEntity.ok(updatedOrderItem);
             } else {
@@ -72,7 +58,7 @@ public class OrderItemController {
             return ResponseEntity.badRequest().build();
         }
     }
-    
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteOrderItem(@PathVariable Long id) {
         try {
@@ -86,21 +72,21 @@ public class OrderItemController {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
+
     @GetMapping("/order/{orderId}")
-    public ResponseEntity<List<OrderItem>> getOrderItemsByOrder(@PathVariable String orderId) {
+    public ResponseEntity<List<OrderItem>> getOrderItemsByOrder(@PathVariable Long orderId) {
         try {
-            List<OrderItem> orderItems = orderItemRepository.findByOrderId(orderId);
+            List<OrderItem> orderItems = orderItemRepository.findByOrder_OrderId(orderId);
             return ResponseEntity.ok(orderItems);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }
     }
-    
+
     @GetMapping("/product/{productId}")
     public ResponseEntity<List<OrderItem>> getOrderItemsByProduct(@PathVariable Long productId) {
         try {
-            List<OrderItem> orderItems = orderItemRepository.findByProductId(productId);
+            List<OrderItem> orderItems = orderItemRepository.findByProduct_ProductId(productId);
             return ResponseEntity.ok(orderItems);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();

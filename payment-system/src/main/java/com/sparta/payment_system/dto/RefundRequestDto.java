@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 public class RefundRequestDto {
     
     private Long paymentId;
-    private BigDecimal amount; // 부분 환불 시 금액 (전체 환불 시 null)
+    private BigDecimal amount; // 부분 환불 시 금액
     private String reason;
     private String customerName;
     private String customerEmail;
