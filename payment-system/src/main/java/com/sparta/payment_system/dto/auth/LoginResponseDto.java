@@ -14,7 +14,7 @@ public class LoginResponseDto {
     private final String membershipRank;
 
     public LoginResponseDto(String token, User user) {
-        this.token = "Bearer " + token;
+        this.token = token;
         this.email = user.getEmail();
         this.userId = user.getUserId();
         this.name = user.getName();
