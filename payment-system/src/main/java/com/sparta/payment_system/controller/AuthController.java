@@ -34,6 +34,7 @@ public class AuthController {
                                                   HttpServletResponse response) {
         TokenResponseDto result = authService.login(request);
 
+        String accessToken = "Bearer " + result.getAccessToken();
         ResponseCookie cookie = ResponseCookie.from("refreshToken", result.getRefreshToken())
                 .httpOnly(true)
                 .secure(false)
@@ -42,12 +43,17 @@ public class AuthController {
                 .maxAge(Duration.ofDays(7))
                 .build();
 
-        response.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + result.getAccessToken());
+        response.setHeader(HttpHeaders.AUTHORIZATION, accessToken);
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         return ResponseEntity.status(HttpStatus.OK).body(
-                new LoginResponseDto(result.getUser()));
+                new LoginResponseDto(accessToken, result.getUser()));
     }
 
-
+    @PostMapping("/refresh")
+    public ResponseEntity<RefreshResponseDto> refresh(@RequestBody RefreshRequestDto request) {
+        RefreshResponseDto result = authService.refresh(request);
+        if(result==null){return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);}
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
 }

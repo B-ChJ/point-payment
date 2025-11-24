@@ -273,10 +273,17 @@
         }
     });
 
+    // // 로그인 페이지에서 point-payment.html로 이동 강제막기
+    // if (!isLocalStorageAvailable()) {
+    //     console.error('localStorage 접근 불가 - 로그인 페이지로 이동');
+    //     window.location.href = 'login.html';
+    //     // return;
+    // }
+
     // 이미 로그인되어 있는지 확인
     window.addEventListener('load', function() {
         const token = localStorage.getItem('authToken');
-        if (token) {
+        if (token !== undefined && token !== null && token !== 'undefined') {
             // 이미 로그인되어 있으면 메인 페이지로 이동
             window.location.href = 'point-payment.html';
         }
