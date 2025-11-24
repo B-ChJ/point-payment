@@ -25,7 +25,7 @@ public class JwtFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String bearerToken = request.getHeader("Authorization");
-        String accessToken = jwtUtil.resolveAccessToken(bearerToken);
+        String accessToken = jwtUtil.resolveToken(bearerToken);
 
         //AccessToken Filter
         if (StringUtils.hasText(accessToken) && jwtUtil.validateAccessToken(accessToken)) {
