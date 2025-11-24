@@ -1412,7 +1412,7 @@
         console.log('localStorage 사용 가능 여부:', isLocalStorageAvailable());
         
         // ... (localStorage 접근 확인 로직은 그대로 둡니다) ...
-        if (!localStorageReady) {
+        if (!isLocalStorageAvailable()) {
             console.error('localStorage 접근 불가 - 로그인 페이지로 이동');
             window.location.href = 'login.html';
             return;
