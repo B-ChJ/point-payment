@@ -2,6 +2,7 @@ package com.sparta.payment_system.controller;
 
 import com.sparta.payment_system.dto.auth.*;
 import com.sparta.payment_system.service.AuthService;
+import com.sparta.payment_system.service.BlacklistService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,6 +24,7 @@ import java.time.Duration;
 public class AuthController {
 
     private final AuthService authService;
+    private final BlacklistService blacklistService;
 
     @PostMapping("/register")
     public ResponseEntity<RegisterResponseDto> register(@RequestBody RegisterRequestDto request) {
@@ -54,23 +56,33 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<RefreshResponseDto> refresh(HttpServletRequest request) {
-        if (request.getCookies() == null) {
+        String refreshToken = getTokenFromCookie(request);
+
+        if (refreshToken == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
         }
 
+        RefreshResponseDto result = authService.refresh(refreshToken);
+
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<LogoutResponseDto> logout(HttpServletRequest request) {
+        String refreshToken = getTokenFromCookie(request);
+
+        LogoutResponseDto result = blacklistService.addLogoutToken(refreshToken);
+
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
+    private String getTokenFromCookie(HttpServletRequest request) {
         String refreshToken = null;
         for (Cookie cookie : request.getCookies()) {
             if (cookie.getName().equals("refreshToken")) {
                 refreshToken = cookie.getValue();
             }
         }
-
-        RefreshResponseDto result = authService.refresh(refreshToken);
-
-        if (result == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
-        }
-
-        return ResponseEntity.status(HttpStatus.OK).body(result);
+        return refreshToken;
     }
 }

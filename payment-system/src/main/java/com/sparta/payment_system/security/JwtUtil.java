@@ -136,4 +136,10 @@ public class JwtUtil {
         }
         return null;
     }
+
+    public Date getExpiration(String refreshToken) {
+        Jws<Claims> claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(refreshToken);
+
+        return claims.getPayload().getExpiration();
+    }
 }
