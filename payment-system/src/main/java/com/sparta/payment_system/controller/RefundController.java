@@ -31,7 +31,7 @@ public class RefundController {
         this.paymentService = paymentService;
     }
 
-    // 환불 요청 API (PortOne API 호출 + DB 반영)
+    // 환불 요청 API
     @PostMapping("/request")
     public Mono<ResponseEntity<String>> requestRefund(@RequestBody RefundRequestDto refundRequest) {
         try {
