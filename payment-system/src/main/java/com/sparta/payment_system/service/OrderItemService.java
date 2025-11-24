@@ -27,7 +27,6 @@ public class OrderItemService {
                 () -> new IllegalArgumentException("not found product")
         );
 
-        //테스트용 임시 주문 생성
         Long userId = 1L;
         Order order = new Order(
                 userId,
