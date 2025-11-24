@@ -52,6 +52,8 @@ public class Product {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    private Integer minStockAlert = 5;
+
     public enum ProductStatus {
         ACTIVE("판매중"),
         OUT_OF_STOCK("품절"),

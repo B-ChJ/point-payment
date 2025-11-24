@@ -54,7 +54,7 @@ public class ProductController {
             return ResponseEntity.internalServerError().build();
         }
     }
-
+    
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProduct(@PathVariable Long id) {
         try {
