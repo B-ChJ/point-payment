@@ -1,11 +1,7 @@
 package com.sparta.payment_system.controller;
 
-import com.sparta.payment_system.dto.order.OrderItemCreateRequestDto;
-import com.sparta.payment_system.dto.order.OrderItemCreateResponseDto;
 import com.sparta.payment_system.entity.OrderItem;
 import com.sparta.payment_system.repository.OrderItemRepository;
-import com.sparta.payment_system.service.OrderItemService;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,15 +15,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class OrderItemController {
 
-    private final OrderItemService orderItemService;
     private final OrderItemRepository orderItemRepository;
-
-
-    @PostMapping("/{productId}")
-    public ResponseEntity<OrderItemCreateResponseDto> createOrderItem(@PathVariable Long productId, @Valid @RequestBody OrderItemCreateRequestDto requestDto) {
-        OrderItemCreateResponseDto savedOrderItem = orderItemService.createOrderItem(1L, productId, requestDto);
-        return ResponseEntity.ok(savedOrderItem);
-    }
 
     @GetMapping
     public ResponseEntity<List<OrderItem>> getAllOrderItems() {
