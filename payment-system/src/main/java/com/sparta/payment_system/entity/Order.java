@@ -28,7 +28,7 @@ public class Order {
     private Long userId;
     
     @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
-    private BigDecimal totalAmount;
+    private BigDecimal totalAmount = BigDecimal.ZERO;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
@@ -42,15 +42,18 @@ public class Order {
     @JsonManagedReference
     private List<OrderItem> orderItems = new ArrayList<>();
 
-    public Order(Long userId, BigDecimal totalAmount) {
-        this.userId = userId;
-        this.totalAmount = totalAmount;
-    }
-
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Payment payment;
 
     public enum OrderStatus {
         PENDING_PAYMENT, COMPLETED, CANCELLED
+    }
+
+    public Order(Long userId) {
+        this.userId = userId;
+    }
+
+    public void updateAmount(BigDecimal amount) {
+        this.totalAmount = amount;
     }
 }
