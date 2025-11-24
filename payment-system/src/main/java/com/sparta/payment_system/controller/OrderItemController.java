@@ -56,8 +56,8 @@ public class OrderItemController {
             Optional<OrderItem> orderItemOptional = orderItemRepository.findById(id);
             if (orderItemOptional.isPresent()) {
                 OrderItem orderItem = orderItemOptional.get();
-                orderItem.setOrderId(orderItemDetails.getOrderId());
-                orderItem.setProductId(orderItemDetails.getProductId());
+                orderItem.setOrder(orderItemDetails.getOrder());
+                orderItem.setProduct(orderItemDetails.getProduct());
                 orderItem.setQuantity(orderItemDetails.getQuantity());
                 orderItem.setPrice(orderItemDetails.getPrice());
 
