@@ -644,13 +644,26 @@
     }
 
     // 로그아웃 처리
-    function handleLogout() {
+    async function handleLogout() {
+        try {
+        const response = await fetch(`${API_BASE_URL}/api/auth/logout`, {
+            method: 'POST'
+        })
+        if (!response.ok) {
+            console.error('로그아웃 실패, 토큰 오류:', response.status);
+            return;
+        }
+        const message = await response.json();
+        console.log('로그아웃 결과:', message)
+
         removeAuthToken();
         USER_ID = null;
         currentUser = null;
-
         // 로그인 페이지로 이동
         window.location.href = 'login.html';
+    } catch(error) {
+        console.error('로그아웃 중 오류 발생:', error);
+        }
     }
 
     // 인증 상태 확인
@@ -801,30 +814,30 @@
             return;
         }
 
-        try {
-            const response = await authenticatedFetch(`${API_BASE_URL}/api/points/balance/${USER_ID}`);
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const data = await response.json();
-            pointBalance = data.balance || 0;
-            
-            document.getElementById('pointBalance').textContent = pointBalance.toLocaleString();
-            document.getElementById('availablePoints').textContent = pointBalance.toLocaleString();
-            
-            // 포인트 입력 최대값 설정
-            const pointsInput = document.getElementById('pointsToUse');
-            pointsInput.max = pointBalance;
-            
-            updateSummary();
-            
-            // 멤버십 정보도 함께 로드
-            await loadMembershipInfo();
-        } catch (error) {
-            console.error('포인트 잔액 조회 오류:', error);
-            showResult('error', '❌ 포인트 잔액 조회 실패', `오류: ${error.message}`);
-        }
+        // try {
+        //     const response = await authenticatedFetch(`${API_BASE_URL}/api/points/balance/${USER_ID}`);
+        //     if (!response.ok) {
+        //         throw new Error(`HTTP error! status: ${response.status}`);
+        //     }
+        //
+        //     const data = await response.json();
+        //     pointBalance = data.balance || 0;
+        //
+        //     document.getElementById('pointBalance').textContent = pointBalance.toLocaleString();
+        //     document.getElementById('availablePoints').textContent = pointBalance.toLocaleString();
+        //
+        //     // 포인트 입력 최대값 설정
+        //     const pointsInput = document.getElementById('pointsToUse');
+        //     pointsInput.max = pointBalance;
+        //
+        //     updateSummary();
+        //
+        //     // 멤버십 정보도 함께 로드
+        //     await loadMembershipInfo();
+        // } catch (error) {
+        //     console.error('포인트 잔액 조회 오류:', error);
+        //     showResult('error', '❌ 포인트 잔액 조회 실패', `오류: ${error.message}`);
+        // }
     }
 
     // 멤버십 정보 조회

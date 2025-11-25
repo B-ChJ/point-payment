@@ -59,10 +59,8 @@ public class AuthService {
     }
 
     public RefreshResponseDto refresh(String refreshToken) {
-        String token = jwtUtil.resolveToken(refreshToken);
-
-        if (token != null && jwtUtil.validateRefreshToken(token)) {
-            String newAccessToken = jwtUtil.createAccessToken(jwtUtil.getAuthentication(token));
+        if (refreshToken != null && jwtUtil.validateRefreshToken(refreshToken)) {
+            String newAccessToken = jwtUtil.createAccessToken(jwtUtil.getAuthentication(refreshToken));
             return new RefreshResponseDto(newAccessToken);
         }
 
