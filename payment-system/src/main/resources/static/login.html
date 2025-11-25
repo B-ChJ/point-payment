@@ -281,9 +281,31 @@
     // }
 
     // 이미 로그인되어 있는지 확인
-    window.addEventListener('load', function() {
+    window.addEventListener('load', async function() {
         const token = localStorage.getItem('authToken');
-        if (token !== undefined && token !== null && token !== 'undefined') {
+        if(!token) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/refresh`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                if (response.ok) {
+                    const newToken = await response.json();
+                    localStorage.setItem('authToken', newToken.token);
+                    window.location.href = 'point-payment.html';
+                } else if (response.status === 204) {
+                    console.log('Refresh Token 없음:', response.status);
+                    return;
+                } else if(response.status === 401) {
+                    console.log('로그아웃 이력이 있습니다. 새롭게 로그인 하셔야 합니다.');
+                    return;
+                }
+            } catch (error) {
+                console.error('토큰 재발급 중 오류 발생:', error);
+                window.location.href = 'login.html';
+            }
+        }
+        if (token !== undefined && token && token !== 'undefined') {
             // 이미 로그인되어 있으면 메인 페이지로 이동
             window.location.href = 'point-payment.html';
         }
