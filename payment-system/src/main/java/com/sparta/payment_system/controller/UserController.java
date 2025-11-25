@@ -1,8 +1,14 @@
 package com.sparta.payment_system.controller;
 
+import com.sparta.payment_system.dto.MyInfoResponseDto;
 import com.sparta.payment_system.entity.User;
+import com.sparta.payment_system.repository.ProductRepository;
 import com.sparta.payment_system.repository.UserRepository;
+import com.sparta.payment_system.security.CustomUserDetails;
+import com.sparta.payment_system.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +20,8 @@ public class UserController {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private UserService userService;
 
     @PostMapping("/user")
     public User createUser(@RequestParam String email, 
@@ -59,4 +67,17 @@ public class UserController {
         userRepository.deleteById(userId);
         return "User deleted successfully";
     }
+
+    /**
+     * 내 정보 조회 API
+     * @return User 객체
+     */
+    @GetMapping("/users/me")
+    public ResponseEntity<MyInfoResponseDto> getMyInfo(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
+        Long userId = customUserDetails.getId();
+        MyInfoResponseDto response = userService.getMyInfo(userId);
+        return ResponseEntity.ok(response);
+    }
+
+
 }
