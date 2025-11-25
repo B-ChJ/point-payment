@@ -42,14 +42,9 @@ public class OrderController {
     }
     
     @GetMapping("/{orderId}")
-    public ResponseEntity<Order> getOrder(@PathVariable Long orderId) {
-        try {
-            Optional<Order> order = orderRepository.findByOrderId(orderId);
-            return order.map(ResponseEntity::ok)
-                    .orElse(ResponseEntity.notFound().build());
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
+    public ResponseEntity<OrderDetailResponseDto> getOrder(@PathVariable Long orderId) {
+        OrderDetailResponseDto responseDto = orderService.getOrder(orderId);
+        return ResponseEntity.ok(responseDto);
     }
     
     @PutMapping("/{orderId}")
