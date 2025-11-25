@@ -38,6 +38,7 @@ public class Order {
     private LocalDateTime createdAt;
 
     @OneToMany
+    @JoinColumn(name = "order_id")
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
