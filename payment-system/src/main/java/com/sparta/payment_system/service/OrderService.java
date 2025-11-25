@@ -9,12 +9,9 @@ import com.sparta.payment_system.repository.OrderItemRepository;
 import com.sparta.payment_system.repository.OrderRepository;
 import com.sparta.payment_system.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.crossstore.ChangeSetPersister;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -34,7 +31,6 @@ public class OrderService {
     public OrderDetailResponseDto createOrder(Long userId, OrderDetailRequestDto requestDto) {
 
         Order order = new Order(userId);
-        orderRepository.save(order);
 
         // 주문 아이템 생성
         if (requestDto.getProductList().isEmpty()) {
@@ -45,27 +41,26 @@ public class OrderService {
         for (OrderDetailRequestDto.ItemDto itemDto : requestDto.getProductList()) {
 
             Product product = productRepository.findById(itemDto.getProductId()).orElseThrow(
-                    () -> new IllegalStateException("not found product Id")
+                    () -> new IllegalStateException("상품 id를 찾을 수 없습니다.")
             );
 
             BigDecimal orderItemPrice = product.getPrice().multiply(BigDecimal.valueOf(itemDto.getQuantity()));
+            totalAmount = totalAmount.add(orderItemPrice);
 
             OrderItem orderItem = new OrderItem(
                 product.getName(),
                 itemDto.getQuantity(),
                 orderItemPrice,
-                order,
                 product
             );
-
             orderItemRepository.save(orderItem);
 
-            order.getOrderItems().add(orderItem);
-
-            totalAmount = totalAmount.add(orderItemPrice);
+            order.setOrderItem(orderItem);
         }
 
-        order.updateAmount(totalAmount);
+        order.setAmount(totalAmount);
+        orderRepository.save(order);
+
         return OrderDetailResponseDto.from(order);
     }
 }

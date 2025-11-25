@@ -3,17 +3,12 @@ package com.sparta.payment_system.controller;
 import com.sparta.payment_system.dto.order.OrderDetailRequestDto;
 import com.sparta.payment_system.dto.order.OrderDetailResponseDto;
 import com.sparta.payment_system.entity.Order;
-import com.sparta.payment_system.entity.OrderItem;
-import com.sparta.payment_system.entity.Product;
 import com.sparta.payment_system.repository.OrderRepository;
-import com.sparta.payment_system.repository.OrderItemRepository;
-import com.sparta.payment_system.repository.ProductRepository;
+import com.sparta.payment_system.security.CustomUserDetails;
 import com.sparta.payment_system.service.OrderService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,13 +25,12 @@ public class OrderController {
     
     @PostMapping
     public ResponseEntity<OrderDetailResponseDto> createOrder(
-            @AuthenticationPrincipal UserDetails userDetails,
+            @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody OrderDetailRequestDto requestDto ) {
-        Long userId = 1L;
-        OrderDetailResponseDto responseDto = orderService.createOrder(userId, requestDto);
+        OrderDetailResponseDto responseDto = orderService.createOrder(userDetails.getId(), requestDto);
         return ResponseEntity.ok(responseDto);
     }
-    
+
     @GetMapping
     public ResponseEntity<List<Order>> getAllOrders() {
         try {
@@ -124,4 +118,6 @@ public class OrderController {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+
 }

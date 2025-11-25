@@ -44,7 +44,6 @@ public class OrderItemController {
             Optional<OrderItem> orderItemOptional = orderItemRepository.findById(id);
             if (orderItemOptional.isPresent()) {
                 OrderItem orderItem = orderItemOptional.get();
-                orderItem.setOrder(orderItemDetails.getOrder());
                 orderItem.setProduct(orderItemDetails.getProduct());
                 orderItem.setQuantity(orderItemDetails.getQuantity());
                 orderItem.setPrice(orderItemDetails.getPrice());
@@ -68,16 +67,6 @@ public class OrderItemController {
             } else {
                 return ResponseEntity.notFound().build();
             }
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    @GetMapping("/order/{orderId}")
-    public ResponseEntity<List<OrderItem>> getOrderItemsByOrder(@PathVariable Long orderId) {
-        try {
-            List<OrderItem> orderItems = orderItemRepository.findByOrder_OrderId(orderId);
-            return ResponseEntity.ok(orderItems);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
         }

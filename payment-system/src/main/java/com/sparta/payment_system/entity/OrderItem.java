@@ -29,20 +29,14 @@ public class OrderItem {
     @Column(name = "price", nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "order_id")
-    @JsonBackReference
-    private Order order;
-
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "product_id")
     private Product product;
 
-    public OrderItem(String name, Integer quantity, BigDecimal price,Order order, Product product) {
+    public OrderItem(String name, Integer quantity, BigDecimal price, Product product) {
         this.name = name;
         this.quantity = quantity;
         this.price = price;
-        this.order = order;
         this.product = product;
     }
 

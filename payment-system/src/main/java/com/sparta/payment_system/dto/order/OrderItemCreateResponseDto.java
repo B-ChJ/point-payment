@@ -13,7 +13,6 @@ public class OrderItemCreateResponseDto {
     private String name;
     private BigDecimal price;
     private Integer quantity;
-    private Long orderId;
     private Long productId;
 
     public static OrderItemCreateResponseDto from(OrderItem orderItem) {
@@ -22,7 +21,6 @@ public class OrderItemCreateResponseDto {
                 orderItem.getName(),
                 orderItem.getPrice(),
                 orderItem.getQuantity(),
-                orderItem.getOrder().getOrderId(),
                 orderItem.getProduct().getProductId()
         );
     }
