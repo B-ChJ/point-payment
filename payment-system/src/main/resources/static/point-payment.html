@@ -725,7 +725,7 @@
                 document.getElementById('userId').value = savedUserId;
 
                 try {
-                    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+                    const response = await fetch(`${API_BASE_URL}/api/users/me`, {
                         headers: {
                             'Authorization': `Bearer ${token}`
                         }
