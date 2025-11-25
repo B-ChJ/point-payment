@@ -20,6 +20,8 @@ public class BlacklistService {
     }
 
     public LogoutResponseDto addLogoutToken(String token) {
+        if(blacklistRepository.existsByToken(token)) { return LogoutResponseDto.save(false); }
+
         Date expirationDate = jwtUtil.getExpiration(token);
         LocalDateTime expiration = new java.sql.Timestamp(expirationDate.getTime()).toLocalDateTime();
 

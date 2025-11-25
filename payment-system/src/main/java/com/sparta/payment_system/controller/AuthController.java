@@ -55,14 +55,17 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<RefreshResponseDto> refresh(HttpServletRequest request) {
+    public ResponseEntity<RefreshResponseDto> refresh(HttpServletRequest request,
+                                                      HttpServletResponse response) {
         String refreshToken = getTokenFromCookie(request);
 
         if (refreshToken == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null);
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
         }
 
         RefreshResponseDto result = authService.refresh(refreshToken);
+        if (result == null) { return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null); }
+        response.setHeader(HttpHeaders.AUTHORIZATION, result.getToken());
 
         return ResponseEntity.status(HttpStatus.OK).body(result);
     }
