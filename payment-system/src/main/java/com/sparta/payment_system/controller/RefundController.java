@@ -23,9 +23,7 @@ public class RefundController {
             Authentication authentication
     ) {
 
-                                // 결제 상태 업데이트 (부분 환불 제거)
-                                payment.setStatus(Payment.PaymentStatus.REFUNDED);
-                                paymentRepository.save(payment);
+        requestDto.setPaymentId(paymentId);
 
                                 System.out.println("환불 처리 완료 - Payment ID: " + payment.getPaymentId() +
                                         ", Refund Amount: " + refundAmount);
