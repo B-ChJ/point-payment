@@ -432,6 +432,7 @@
 
 
                     const orderResult = await orderResponse.json();
+                    console.log("orderResult", orderResult)
                     const newOrderId = orderResult.orderId;
                     document.getElementById('orderId').value = newOrderId; // 새로 발급된 ID로 업데이트
 
