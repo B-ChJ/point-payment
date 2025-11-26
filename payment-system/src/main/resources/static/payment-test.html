@@ -430,6 +430,7 @@
 
                     if (!orderResponse.ok) throw new Error(`주문 생성 실패. 상태: ${orderResponse.status}`);
 
+
                     const orderResult = await orderResponse.json();
                     const newOrderId = orderResult.orderId;
                     document.getElementById('orderId').value = newOrderId; // 새로 발급된 ID로 업데이트
