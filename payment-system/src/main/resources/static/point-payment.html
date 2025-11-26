@@ -620,8 +620,9 @@
         }
         
         const headers = { ...getAuthHeaders(), ...(options.headers || {}) };
+        console.info("headers", headers)
         const response = await fetch(url, { ...options, headers });
-        
+        console.info("response", response)
         if (response.status === 401 || response.status === 403) {
             // 인증 실패 시 - 토큰이 만료된 경우에만 로그아웃
             // 단, 인증 상태 확인이 진행 중이 아닐 때만 처리
@@ -1084,6 +1085,7 @@
     });
 
     // 결제 처리
+
     async function processPayment() {
         if (!USER_ID) {
        //     showResult('error', '❌ 인증 필요', '로그인이 필요합니다.');
@@ -1129,8 +1131,10 @@
                     productName: orderName
                 }]
             };
+            console.info("getAuthHeaders()", getAuthHeaders())
+            console.log("paymentRequest", paymentRequest)
 
-            const response = await authenticatedFetch(`${API_BASE_URL}/api/payments/request`, {
+            const response = await authenticatedFetch(`${API_BASE_URL}/api/orders/${orderId}/payments?userId=${userId}`, {
                 method: 'POST',
                 headers: getAuthHeaders(),
                 body: JSON.stringify(paymentRequest)
