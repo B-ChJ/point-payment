@@ -7,9 +7,7 @@ import com.sparta.payment_system.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
@@ -43,5 +41,11 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/points/charge/{userId}")
+    public ResponseEntity<PointBalanceResponseDto> chargePoints(@PathVariable Long userId) {
+        PointBalanceResponseDto result = userService.charge(userId);
+
+        return ResponseEntity.ok(result);
+    }
 
 }
