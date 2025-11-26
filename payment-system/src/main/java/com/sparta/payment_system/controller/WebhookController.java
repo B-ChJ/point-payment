@@ -1,7 +1,6 @@
 package com.sparta.payment_system.controller;
 
 import com.sparta.payment_system.dto.webhook.WebhookRequestDto;
-import com.sparta.payment_system.entity.Payment;
 import com.sparta.payment_system.service.PaymentService;
 import com.sparta.payment_system.service.RefundService;
 import lombok.RequiredArgsConstructor;
