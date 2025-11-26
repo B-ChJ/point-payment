@@ -19,7 +19,7 @@ public class WebhookController {
 
     @PostMapping("/payment")
     public ResponseEntity<String> handleWebhook(@RequestBody WebhookRequestDto webhookRequest) {
-        log.info("Webhook Received: {}", webhookRequest); // 들어온 데이터 확인용 로그
+        log.info("Webhook Received: {}", webhookRequest);
 
         String paymentKey = webhookRequest.getPaymentKey();
 
