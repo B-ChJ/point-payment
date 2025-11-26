@@ -13,16 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class RefundController {
 
-    private final RefundRepository refundRepository;
-    private final PaymentRepository paymentRepository;
-    private final PaymentService paymentService;
-
-    @Autowired
-    public RefundController(RefundRepository refundRepository, PaymentRepository paymentRepository, PaymentService paymentService) {
-        this.refundRepository = refundRepository;
-        this.paymentRepository = paymentRepository;
-        this.paymentService = paymentService;
-    }
+    private final RefundService refundService;
 
     // 환불 요청 API
     @PostMapping("/request")
