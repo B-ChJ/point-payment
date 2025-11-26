@@ -25,8 +25,8 @@ public class RefundController {
 
         requestDto.setPaymentId(paymentId);
 
-                                System.out.println("환불 처리 완료 - Payment ID: " + payment.getPaymentId() +
-                                        ", Refund Amount: " + refundAmount);
+        // 현재 로그인된 사용자 ID 추출
+        Long currentUserId = Long.parseLong(authentication.getName());
 
                                 return ResponseEntity.ok("환불이 성공적으로 처리되었습니다. 환불 금액: " + refundAmount);
                             } catch (Exception e) {
