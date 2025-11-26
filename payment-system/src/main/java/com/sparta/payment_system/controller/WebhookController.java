@@ -22,7 +22,6 @@ public class WebhookController {
         log.info("Webhook Received: {}", webhookRequest);
 
         String paymentKey = webhookRequest.getPaymentKey();
-
         String status = webhookRequest.getStatus().toUpperCase();
 
         try {
@@ -53,6 +52,4 @@ public class WebhookController {
         return ResponseEntity.ok("Webhook processed");
     }
 }
-
-
 
