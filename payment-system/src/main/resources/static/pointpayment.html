@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스파르타 포인트 스토어</title>
+    <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+        }
+
+        .shop-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-logo {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .brand h2 {
+            font-size: 18px;
+            color: #444;
+        }
+
+        .badge {
+            font-size: 11px;
+            background: #e6f4ff;
+            color: #1677ff;
+            padding: 3px 8px;
+            border-radius: 999px;
+            border: 1px solid #bae0ff;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border: 2px solid #f0f0f0;
+        }
+
+        .user-info span {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .logout-btn {
+            padding: 6px 12px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .point-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .point-info h3 {
+            font-size: 14px;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        .point-balance {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .point-balance small {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        .membership-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .membership-normal {
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .membership-vip {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .membership-vvip {
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            color: #333;
+        }
+
+        .point-charge-btn {
+            margin-top: 12px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .point-charge-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .product {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 20px;
+            padding: 16px;
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            background: #fafafa;
+            margin-bottom: 20px;
+        }
+
+        .product-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 10px;
+            background: #e9e9ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        .product-info h3 {
+            font-size: 18px;
+            color: #222;
+            margin-bottom: 6px;
+        }
+
+        .product-info p {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .price-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .price {
+            font-size: 18px;
+            font-weight: 800;
+            color: #333;
+        }
+
+        .point-usage-section {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .point-usage-section h4 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        .point-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .point-input-group input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .point-input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .point-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-point {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            background: #667eea;
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .btn-point:hover {
+            background: #5568d3;
+        }
+
+        .helper-text {
+            margin-top: 8px;
+            font-size: 12px;
+            color: #777;
+        }
+
+        .summary {
+            margin-top: 18px;
+            padding: 16px;
+            border: 2px dashed #eaeaea;
+            border-radius: 12px;
+            background: #fff;
+        }
+
+        .summary-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .summary-row.total {
+            margin-top: 6px;
+            padding-top: 10px;
+            border-top: 1px solid #efefef;
+            font-weight: 800;
+            color: #222;
+            font-size: 18px;
+        }
+
+        .summary-row.point-discount {
+            color: #52c41a;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            grid-column: 1 / -1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .result.success {
+            background: #d4edda;
+            border: 2px solid #c3e6cb;
+            color: #155724;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            border: 2px solid #f5c6cb;
+            color: #721c24;
+        }
+
+        .result.info {
+            background: #d1ecf1;
+            border: 2px solid #bee5eb;
+            color: #0c5460;
+        }
+
+        .result h3 {
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .result pre {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .payment-history {
+            margin-top: 24px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .payment-history h3 {
+            margin-bottom: 16px;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .payment-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .payment-item-info {
+            flex: 1;
+        }
+
+        .payment-item-amount {
+            font-weight: 700;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 헤더 -->
+    <div class="shop-header">
+        <div class="brand">
+            <div class="brand-logo"></div>
+            <h2>Sparta Point Shop</h2>
+        </div>
+        <span class="badge">포인트 결제 테스트</span>
+    </div>
+
+    <!-- 사용자 정보 섹션 -->
+    <div class="user-info" id="userInfoSection" style="display: none;">
+        <span id="userInfoText">사용자 정보</span>
+        <button class="logout-btn" onclick="handleLogout()">로그아웃</button>
+    </div>
+
+    <!-- 타이틀 -->
+    <h1>🛒 스파르타 포인트 스토어</h1>
+    <p class="subtitle">포인트를 사용하여 결제할 수 있습니다</p>
+
+    <!-- 포인트 잔액 표시 -->
+    <div class="point-info">
+        <h3>보유 포인트</h3>
+        <div class="point-balance">
+            <span id="pointBalance">0</span><small> P</small>
+        </div>
+        <div id="membershipBadge" class="membership-badge membership-normal">
+            <span id="membershipLevel">NORMAL</span>
+        </div>
+        <div style="margin-top: 8px; font-size: 12px; opacity: 0.9;">
+            총 결제 금액: <span id="totalPaymentAmount">0</span>원
+        </div>
+        <button class="point-charge-btn" onclick="chargePoints()">💰 100,000 포인트 충전</button>
+    </div>
+
+    <!-- 상품 정보 -->
+    <div class="product" id="productInfo">
+        <div class="product-image">IMG</div>
+        <div class="product-info">
+            <h3 id="productName">상품 정보 로딩 중...</h3>
+            <p id="productDescription">상품 설명을 불러오고 있습니다.</p>
+            <div class="price-row">
+                <span class="price" id="productPrice">0원</span>
+                <span class="badge">무료배송</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 포인트 사용 섹션 -->
+    <div class="point-usage-section">
+        <h4>💎 포인트 사용</h4>
+        <div class="point-input-group">
+            <input type="number" id="pointsToUse" placeholder="사용할 포인트 입력" min="0" value="0">
+            <div class="point-buttons">
+                <button class="btn-point" onclick="useAllPoints()">전액 사용</button>
+                <button class="btn-point" onclick="useHalfPoints()">50% 사용</button>
+            </div>
+        </div>
+        <div class="helper-text">
+            사용 가능한 포인트: <strong id="availablePoints">0</strong> P
+        </div>
+    </div>
+
+    <!-- 결제 요약 -->
+    <div class="summary">
+        <div class="summary-row">
+            <span>상품 금액</span>
+            <strong id="summaryPrice">0원</strong>
+        </div>
+        <div class="summary-row point-discount" id="pointDiscountRow" style="display: none;">
+            <span>포인트 할인</span>
+            <strong>-<span id="pointDiscountAmount">0</span>원</strong>
+        </div>
+        <div class="summary-row total">
+            <span>최종 결제 금액</span>
+            <strong id="finalAmount">0원</strong>
+        </div>
+    </div>
+
+    <!-- 버튼 영역 -->
+    <div class="actions">
+        <button type="button" class="btn-primary" id="payButton" onclick="processPayment()">
+            💳 결제하기
+        </button>
+        <button type="button" class="btn-secondary" onclick="loadPaymentHistory()">결제 내역</button>
+        <button type="button" class="btn-secondary" onclick="createTestProduct()">테스트 상품 생성</button>
+        <button type="button" class="btn-secondary" onclick="loadPointBalance()">포인트 새로고침</button>
+    </div>
+
+    <!-- 결제 내역 섹션 -->
+    <div id="paymentHistorySection" class="payment-history" style="display: none;">
+        <h3>결제 내역</h3>
+        <div id="paymentHistoryContent"></div>
+    </div>
+
+    <!-- 결과 메시지 -->
+    <div id="result" class="result"></div>
+</div>
+<script>
+    // ============================================
+    // 설정
+    // ============================================
+    const CONFIG = {
+        API_BASE_URL: 'http://localhost:8080',
+        PORTONE: {
+            STORE_ID: '여기에_발급받은_STORE_ID_입력',
+            CHANNEL_KEY: '여기에_발급받은_CHANNEL_KEY_입력'
+        },
+        DEFAULT_PRODUCT_ID: 1
+    };
+
+    // ============================================
+    // 전역 변수
+    // ============================================
+    let currentUser = null;
+    let currentProduct = null;
+    let pointBalance = 0;
+
+    // ============================================
+    // 인증 관련 함수
+    // ============================================
+    function getAuthToken() {
+        try {
+            return localStorage.getItem('authToken');
+        } catch (e) {
+            console.error('토큰 읽기 실패:', e);
+            return null;
+        }
+    }
+
+    function setAuthToken(token) {
+        try {
+            localStorage.setItem('authToken', token);
+        } catch (e) {
+            console.error('토큰 저장 실패:', e);
+        }
+    }
+
+    function removeAuthToken() {
+        try {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+        } catch (e) {
+            console.error('토큰 제거 실패:', e);
+        }
+    }
+
+    function getAuthHeaders() {
+        const token = getAuthToken();
+        const headers = {'Content-Type': 'application/json'};
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        return headers;
+    }
+
+    async function authenticatedFetch(url, options = {}) {
+        const headers = {...getAuthHeaders(), ...(options.headers || {})};
+        const response = await fetch(url, {...options, headers});
+
+        if (response.status === 401 || response.status === 403) {
+            const token = getAuthToken();
+            if (token) {
+                showResult('error', '❌ 인증 오류', '세션이 만료되었습니다. 다시 로그인해주세요.');
+                setTimeout(() => {
+                    removeAuthToken();
+                    window.location.href = 'login.html';
+                }, 2000);
+            }
+            throw new Error('인증이 필요합니다.');
+        }
+
+        return response;
+    }
+
+    // ============================================
+    // 인증 상태 확인
+    // ============================================
+    async function checkAuthStatus() {
+        try {
+            const token = getAuthToken();
+            const savedUserId = localStorage.getItem('userId');
+
+            if (!token || !savedUserId) {
+                console.warn('인증 토큰이 없습니다.');
+                window.location.href = 'login.html';
+                return false;
+            }
+
+            const response = await fetch(`${CONFIG.API_BASE_URL}/api/users/me`, {
+                headers: {'Authorization': `Bearer ${token}`}
+            });
+
+            if (response.ok) {
+                const userData = await response.json();
+                currentUser = userData;
+
+                document.getElementById('userInfoSection').style.display = 'flex';
+                document.getElementById('userInfoText').textContent =
+                    `${userData.name} (${userData.email})`;
+
+                return true;
+            } else if (response.status === 401) {
+                removeAuthToken();
+                window.location.href = 'login.html';
+                return false;
+            } else {
+                document.getElementById('userInfoText').textContent = `사용자 ID: ${savedUserId}`;
+                return true;
+            }
+        } catch (error) {
+            console.error('인증 상태 확인 오류:', error);
+            return false;
+        }
+    }
+
+    // ============================================
+    // 로그아웃
+    // ============================================
+    async function handleLogout() {
+        try {
+            await fetch(`${CONFIG.API_BASE_URL}/api/auth/logout`, {
+                method: 'POST',
+                headers: getAuthHeaders()
+            });
+        } catch (error) {
+            console.error('로그아웃 오류:', error);
+        } finally {
+            removeAuthToken();
+            window.location.href = 'login.html';
+        }
+    }
+
+    // ============================================
+    // UI 유틸리티
+    // ============================================
+    function showResult(type, title, message, data = null) {
+        const resultDiv = document.getElementById('result');
+        resultDiv.className = `result ${type}`;
+        resultDiv.style.display = 'block';
+
+        let html = `<h3>${title}</h3><p>${message}</p>`;
+        if (data) {
+            html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+        }
+        resultDiv.innerHTML = html;
+
+        resultDiv.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+    }
+
+    function formatNumber(num) {
+        return Math.floor(num).toLocaleString('ko-KR');
+    }
+
+    // ============================================
+    // 포인트 관련 함수
+    // ============================================
+    async function loadPointBalance() {
+        if (!currentUser) {
+            console.warn('사용자 정보가 없습니다.');
+            return;
+        }
+
+        try {
+            const response = await authenticatedFetch(`${CONFIG.API_BASE_URL}/api/users/me/points`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            pointBalance = data.total_points || 0;
+
+            document.getElementById('pointBalance').textContent = formatNumber(pointBalance);
+            document.getElementById('availablePoints').textContent = formatNumber(pointBalance);
+
+            const pointsInput = document.getElementById('pointsToUse');
+            pointsInput.max = pointBalance;
+
+            updateSummary();
+            await loadMembershipInfo();
+        } catch (error) {
+            console.error('포인트 조회 오류:', error);
+            showResult('error', '❌ 포인트 조회 실패', `오류: ${error.message}`);
+        }
+    }
+
+    async function loadMembershipInfo() {
+        if (!currentUser) {
+            displayMembershipInfo('NORMAL', 0);
+            return;
+        }
+
+        try {
+            const response = await authenticatedFetch(`${CONFIG.API_BASE_URL}/api/users/me`);
+            if (!response.ok) {
+                displayMembershipInfo('NORMAL', 0);
+                return;
+            }
+
+            const data = await response.json();
+            const levelName = data.membershipLevel || 'NORMAL';
+
+            displayMembershipInfo(levelName, pointBalance);
+        } catch (error) {
+            console.error('멤버십 정보 조회 오류:', error);
+            displayMembershipInfo('NORMAL', 0);
+        }
+    }
+
+    function displayMembershipInfo(levelName, totalAmount) {
+        document.getElementById('membershipLevel').textContent = levelName;
+        document.getElementById('totalPaymentAmount').textContent = formatNumber(totalAmount);
+
+        const badge = document.getElementById('membershipBadge');
+        badge.className = 'membership-badge';
+        badge.classList.remove('membership-normal', 'membership-vip', 'membership-vvip');
+
+        if (levelName === 'VIP') {
+            badge.classList.add('membership-vip');
+        } else if (levelName === 'VVIP') {
+            badge.classList.add('membership-vvip');
+        } else {
+            badge.classList.add('membership-normal');
+        }
+    }
+
+    async function chargePoints() {
+        if (!currentUser) {
+            showResult('error', '❌ 인증 필요', '로그인이 필요합니다.');
+            return;
+        }
+
+        try {
+            showResult('info', '⏳ 포인트 충전 중...', '100,000 포인트를 충전하고 있습니다...');
+
+            const response = await authenticatedFetch(
+                `${CONFIG.API_BASE_URL}/api/points/charge/${currentUser.userId}`,
+                {method: 'POST'}
+            );
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText);
+            }
+
+            const data = await response.json();
+            showResult('success', '✅ 포인트 충전 완료!',
+                `100,000 포인트가 충전되었습니다!<br>새로운 잔액: ${formatNumber(data.total_points)} P`);
+
+            setTimeout(() => loadPointBalance(), 1000);
+        } catch (error) {
+            console.error('포인트 충전 오류:', error);
+            showResult('error', '❌ 포인트 충전 실패', `오류: ${error.message}`);
+        }
+    }
+
+    // ============================================
+    // 상품 관련 함수
+    // ============================================
+    async function loadProductInfo() {
+        try {
+            showResult('info', '⏳ 상품 정보 로딩...', 'DB에서 상품 정보를 가져오고 있습니다...');
+
+            const response = await fetch(`${CONFIG.API_BASE_URL}/api/products/${CONFIG.DEFAULT_PRODUCT_ID}`);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const product = await response.json();
+            currentProduct = product;
+
+            document.getElementById('productName').textContent = product.name;
+            document.getElementById('productDescription').textContent =
+                product.description || '상품 설명이 없습니다.';
+            document.getElementById('productPrice').textContent = `${formatNumber(product.price)}원`;
+            document.getElementById('summaryPrice').textContent = `${formatNumber(product.price)}원`;
+
+            updateSummary();
+
+            showResult('success', '✅ 상품 정보 로드 완료', '상품 정보가 로드되었습니다.', product);
+        } catch (error) {
+            console.error('상품 정보 로드 오류:', error);
+            showResult('error', '❌ 상품 정보 로드 실패', `오류: ${error.message}`);
+        }
+    }
+
+    async function createTestProduct() {
+        try {
+            showResult('info', '⏳ 테스트 상품 생성 중...', 'DB에 테스트 상품을 생성하고 있습니다...');
+
+            const response = await fetch(`${CONFIG.API_BASE_URL}/api/products`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    name: '아메리카노',
+                    price: 4500,
+                    stock: 100,
+                    description: '포인트 결제 테스트용 상품입니다.'
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(errorText);
+            }
+
+            const product = await response.json();
+            showResult('success', '✅ 테스트 상품 생성 완료', '테스트 상품이 생성되었습니다.', product);
+
+            setTimeout(() => loadProductInfo(), 1000);
+        } catch (error) {
+            console.error('테스트 상품 생성 오류:', error);
+            showResult('error', '❌ 테스트 상품 생성 실패', `오류: ${error.message}`);
+        }
+    }
+
+    // ============================================
+    // 포인트 사용 UI 함수
+    // ============================================
+    function updateSummary() {
+        if (!currentProduct) return;
+
+        const productPrice = parseFloat(currentProduct.price) || 0;
+        const pointsToUse = parseInt(document.getElementById('pointsToUse').value) || 0;
+
+        const pointDiscount = Math.min(pointsToUse, productPrice, pointBalance);
+        const finalAmount = Math.max(0, productPrice - pointDiscount);
+
+        document.getElementById('pointDiscountAmount').textContent = formatNumber(pointDiscount);
+        document.getElementById('finalAmount').textContent = `${formatNumber(finalAmount)}원`;
+
+        if (pointDiscount > 0) {
+            document.getElementById('pointDiscountRow').style.display = 'flex';
+        } else {
+            document.getElementById('pointDiscountRow').style.display = 'none';
+        }
+
+        const payButton = document.getElementById('payButton');
+        if (finalAmount > 0) {
+            payButton.textContent = `💳 ${formatNumber(finalAmount)}원 결제하기`;
+        } else {
+            payButton.textContent = '✅ 포인트로 전액 결제';
+        }
+    }
+
+    function useAllPoints() {
+        if (!currentProduct) return;
+        const productPrice = parseFloat(currentProduct.price) || 0;
+        const maxPoints = Math.min(pointBalance, productPrice);
+        document.getElementById('pointsToUse').value = maxPoints;
+        updateSummary();
+    }
+
+    function useHalfPoints() {
+        if (!currentProduct) return;
+        const productPrice = parseFloat(currentProduct.price) || 0;
+        const maxPoints = Math.min(pointBalance, productPrice);
+        document.getElementById('pointsToUse').value = Math.floor(maxPoints / 2);
+        updateSummary();
+    }
+
+    document.getElementById('pointsToUse').addEventListener('input', function () {
+        const value = parseInt(this.value) || 0;
+        if (value > pointBalance) {
+            this.value = pointBalance;
+        }
+        if (value < 0) {
+            this.value = 0;
+        }
+        updateSummary();
+    });
+    // ============================================
+    // 결제 처리
+    // ============================================
+    async function processPayment() {
+        if (!currentUser) {
+            showResult('error', '❌ 인증 필요', '로그인이 필요합니다.');
+            return;
+        }
+
+        if (!currentProduct) {
+            showResult('error', '❌ 상품 오류', '상품 정보를 먼저 로드해주세요.');
+            return;
+        }
+
+        const productPrice = parseFloat(currentProduct.price) || 0;
+        const pointsToUse = parseInt(document.getElementById('pointsToUse').value) || 0;
+        const finalAmount = Math.max(0, productPrice - Math.min(pointsToUse, productPrice, pointBalance));
+
+        try {
+            const payButton = document.getElementById('payButton');
+            payButton.disabled = true;
+            payButton.textContent = '처리 중...';
+
+            showResult('info', '⏳ 주문 생성 중...', '주문을 생성하고 있습니다...');
+
+            // 1. 주문 생성
+            const orderResponse = await authenticatedFetch(`${CONFIG.API_BASE_URL}/api/orders`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    productList: [{
+                        productId: currentProduct.productId,
+                        quantity: 1
+                    }]
+                })
+            });
+
+            if (!orderResponse.ok) {
+                const errorText = await orderResponse.text();
+                throw new Error(`주문 생성 실패: ${errorText}`);
+            }
+
+            const orderData = await orderResponse.json();
+            const orderId = orderData.orderId;
+
+            showResult('success', '✅ 주문 생성 완료', `주문 ID: ${orderId}`);
+
+            // 2. 결제 요청 생성
+            showResult('info', '⏳ 결제 준비 중...', '결제 정보를 생성하고 있습니다...');
+
+            const paymentRequest = {
+                method: pointsToUse >= productPrice ? 'POINT' : 'CARD',
+                points_to_use: pointsToUse,
+                discount_amount: 0,
+                amount: finalAmount,
+                original_amount: productPrice
+            };
+
+            const paymentResponse = await authenticatedFetch(
+                `${CONFIG.API_BASE_URL}/api/orders/${orderId}/payments`,
+                {
+                    method: 'POST',
+                    body: JSON.stringify(paymentRequest)
+                }
+            );
+
+            if (!paymentResponse.ok) {
+                const errorText = await paymentResponse.text();
+                throw new Error(`결제 생성 실패: ${errorText}`);
+            }
+
+            const paymentData = await paymentResponse.json();
+            const paymentId = paymentData.payment.id;
+
+            // 3. 포인트 전액 결제인 경우
+            if (finalAmount <= 0) {
+                showResult('info', '⏳ 포인트 결제 처리 중...', '포인트로 결제를 완료하고 있습니다...');
+
+                const completeResponse = await authenticatedFetch(
+                    `${CONFIG.API_BASE_URL}/api/payments/${paymentId}/complete`,
+                    {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            order_id: orderId.toString(),
+                            amount_paid: 0,
+                            points_used: pointsToUse,
+                            payment_method: 'POINT'
+                        })
+                    }
+                );
+
+                if (completeResponse.ok) {
+                    const completeData = await completeResponse.json();
+                    showResult('success', '✅ 포인트 결제 완료!',
+                        `포인트로 전액 결제가 완료되었습니다!<br>적립 포인트: ${completeData.points_earned || 0}P`);
+
+                    setTimeout(() => {
+                        loadPointBalance();
+                        loadPaymentHistory();
+                    }, 1000);
+                } else {
+                    const errorText = await completeResponse.text();
+                    throw new Error(`포인트 결제 완료 실패: ${errorText}`);
+                }
+
+                payButton.disabled = false;
+                payButton.textContent = '💳 결제하기';
+                return;
+            }
+
+            // 4. 카드 결제 (PortOne)
+            showResult('info', '⏳ 결제 창 열기', 'PortOne 결제 창이 열립니다...');
+
+            const portonePaymentId = `pay-${Date.now()}-${orderId}`;
+
+            sessionStorage.setItem('pendingPaymentId', paymentId);
+            sessionStorage.setItem('pendingOrderId', orderId.toString());
+
+            const paymentResult = await PortOne.requestPayment({
+                storeId: CONFIG.PORTONE.STORE_ID,
+                channelKey: CONFIG.PORTONE.CHANNEL_KEY,
+                paymentId: portonePaymentId,
+                orderName: currentProduct.name,
+                totalAmount: finalAmount,
+                currency: "CURRENCY_KRW",
+                payMethod: 'CARD',
+                customer: {
+                    customerId: String(currentUser.userId),
+                    fullName: currentUser.name,
+                    phoneNumber: "010-0000-0000",
+                    email: currentUser.email
+                },
+                redirectUrl: window.location.href,
+                customData: {
+                    orderId: orderId,
+                    paymentId: paymentId
+                }
+            });
+
+            if (paymentResult.code != null) {
+                throw new Error(`PortOne 결제 실패: ${paymentResult.message}`);
+            }
+
+            // 5. 결제 검증
+            await verifyPayment(paymentId, orderId, finalAmount, pointsToUse);
+
+            payButton.disabled = false;
+            payButton.textContent = '💳 결제하기';
+
+        } catch (error) {
+            console.error('결제 오류:', error);
+            showResult('error', '❌ 결제 오류', `오류: ${error.message}`);
+
+            const payButton = document.getElementById('payButton');
+            payButton.disabled = false;
+            payButton.textContent = '💳 결제하기';
+        }
+    }
+
+    // ============================================
+    // 결제 검증
+    // ============================================
+    async function verifyPayment(paymentId, orderId, amountPaid, pointsUsed) {
+        try {
+            showResult('info', '⏳ 결제 검증 중...', '결제를 검증하고 있습니다...');
+
+            const response = await authenticatedFetch(
+                `${CONFIG.API_BASE_URL}/api/payments/${paymentId}/complete`,
+                {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        order_id: orderId.toString(),
+                        amount_paid: amountPaid,
+                        points_used: pointsUsed,
+                        payment_method: 'CARD'
+                    })
+                }
+            );
+
+            if (response.ok) {
+                const data = await response.json();
+                showResult('success', '✅ 결제 완료!',
+                    `결제가 완료되었습니다!<br>적립 포인트: ${data.points_earned || 0}P`);
+
+                sessionStorage.removeItem('pendingPaymentId');
+                sessionStorage.removeItem('pendingOrderId');
+
+                setTimeout(() => {
+                    loadPointBalance();
+                    loadPaymentHistory();
+                }, 1000);
+            } else {
+                const errorText = await response.text();
+                throw new Error(errorText);
+            }
+        } catch (error) {
+            console.error('결제 검증 오류:', error);
+            showResult('error', '❌ 결제 검증 실패', `오류: ${error.message}`);
+        }
+    }
+
+    // ============================================
+    // 결제 내역 조회
+    // ============================================
+    async function loadPaymentHistory() {
+        if (!currentUser) {
+            showResult('error', '❌ 인증 필요', '로그인이 필요합니다.');
+            return;
+        }
+
+        try {
+            showResult('info', '⏳ 조회 중...', '결제 내역을 조회하고 있습니다...');
+
+            const response = await authenticatedFetch(
+                `${CONFIG.API_BASE_URL}/api/users/${currentUser.userId}/payments`
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const payments = await response.json();
+
+            let historyHTML = '';
+
+            if (!Array.isArray(payments) || payments.length === 0) {
+                historyHTML = '<p style="text-align: center; color: #666;">결제 내역이 없습니다.</p>';
+            } else {
+                payments.forEach(payment => {
+                    historyHTML += `<div class="payment-item">`;
+                    historyHTML += `<div class="payment-item-info">`;
+                    historyHTML += `<div><strong>주문 #${payment.orderId}</strong></div>`;
+                    historyHTML += `<div style="font-size: 12px; color: #666; margin-top: 4px;">`;
+                    historyHTML += `상태: ${payment.status} | 포인트: ${payment.usedPoint || 0}P`;
+                    historyHTML += `</div>`;
+                    historyHTML += `</div>`;
+                    historyHTML += `<div class="payment-item-amount">${formatNumber(payment.totalAmount)}원</div>`;
+                    historyHTML += `</div>`;
+                });
+            }
+
+            document.getElementById('paymentHistoryContent').innerHTML = historyHTML;
+            document.getElementById('paymentHistorySection').style.display = 'block';
+
+            showResult('success', '✅ 결제 내역 조회 완료',
+                `총 ${payments.length}건의 결제 내역을 조회했습니다.`);
+        } catch (error) {
+            console.error('결제 내역 조회 오류:', error);
+            showResult('error', '❌ 결제 내역 조회 실패', `오류: ${error.message}`);
+        }
+    }
+
+    // ============================================
+    // 리다이렉트 후 결제 확인
+    // ============================================
+    function checkPaymentRedirect() {
+        const pendingPaymentId = sessionStorage.getItem('pendingPaymentId');
+        const pendingOrderId = sessionStorage.getItem('pendingOrderId');
+
+        if (pendingPaymentId && pendingOrderId) {
+            console.log('결제 리다이렉트 감지:', {paymentId: pendingPaymentId, orderId: pendingOrderId});
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const status = urlParams.get('status');
+
+            if (status === 'success' || status === 'paid') {
+                setTimeout(() => {
+                    verifyPayment(pendingPaymentId, pendingOrderId, 0, 0);
+                }, 1000);
+            }
+
+            // URL 정리
+            const cleanUrl = window.location.origin + window.location.pathname;
+            window.history.replaceState({}, document.title, cleanUrl);
+        }
+    }
+
+    // ============================================
+    // 페이지 초기화
+    // ============================================
+    window.addEventListener('load', async function () {
+        console.log('페이지 로드 시작');
+
+        try {
+            const isAuthenticated = await checkAuthStatus();
+
+            if (isAuthenticated) {
+                checkPaymentRedirect();
+                await Promise.all([
+                    loadPointBalance(),
+                    loadProductInfo()
+                ]);
+            } else {
+                await loadProductInfo();
+            }
+        } catch (error) {
+            console.error('페이지 초기화 오류:', error);
+            await loadProductInfo();
+        }
+    });
+</script>
+</body>
+</html>
