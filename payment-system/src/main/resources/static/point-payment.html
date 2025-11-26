@@ -630,12 +630,11 @@
                 const token = getAuthToken();
                 if (!token) {
                     // 토큰이 없으면 이미 로그아웃된 상태
-                    handleLogout();
                     throw new Error('인증이 필요합니다.');
                 }
                 // 토큰이 있는데 401이면 만료된 것 - 로그아웃 처리
                 console.warn('인증 토큰이 만료되었습니다.');
-                handleLogout();
+
                 showResult('error', '❌ 인증 오류', '인증이 만료되었거나 유효하지 않습니다. 다시 로그인해주세요.');
                 throw new Error('인증이 필요합니다.');
             }
