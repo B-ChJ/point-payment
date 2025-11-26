@@ -27,15 +27,12 @@ public class WebhookController {
         try {
             switch (status) {
                 case "PAID" -> {
-                    // 결제 완료는 PaymentService로 위임
-                    paymentService.completePaymentByPaymentKey(paymentKey,null);
+                    paymentService.completePaymentVerification(paymentKey, null);
                 }
                 case "FAILED" -> {
-                    // 결제 실패는 PaymentService로 위임
                     paymentService.failPaymentByPaymentKey(paymentKey);
                 }
                 case "CANCELLED", "REFUNDED" -> {
-                    // 환불/취소는 RefundService로 위임 (SRP 준수)
                     refundService.processWebhookRefund(paymentKey, "PG Webhook Notification");
                 }
                 default -> {
@@ -45,11 +42,9 @@ public class WebhookController {
             }
         } catch (Exception e) {
             log.error("Error processing webhook for paymentKey {}: {}", paymentKey, e.getMessage());
-            // PG사 재시도를 막기 위해 성공 응답을 보낼 수도 있으나, 여기서는 오류를 명확히 알림
             return ResponseEntity.status(500).body("Error during processing");
         }
 
         return ResponseEntity.ok("Webhook processed successfully");
     }
 }
-
