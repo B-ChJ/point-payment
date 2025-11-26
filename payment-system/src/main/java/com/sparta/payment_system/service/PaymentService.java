@@ -97,15 +97,18 @@ public class PaymentService {
 
     // 2. 결제 완료 처리
     @Transactional
-    public PaymentResponseDto completePaymentVerification(String paymentKey , Long currentUserId) { // 🌟 메서드 이름 변경 및 userId 사용
+    public PaymentResponseDto completePaymentVerification(String paymentKey , Long currentUserId) {
 
         Payment payment = getPaymentByPaymentKey(paymentKey);
         User user = getUserByPayment(payment);
 
 
-        if (currentUserId != null && !payment.getOrder().getUserId().equals(currentUserId)) {
-            throw new SecurityException("해당 결제 건에 대한 권한이 없습니다.");
+        if (currentUserId != null) {
+            if (!payment.getOrder().getUserId().equals(currentUserId)) {
+                throw new SecurityException("해당 결제 건에 대한 권한이 없습니다.");
+            }
         }
+
 
         // 이미 완료된 경우, 불필요한 재처리 방지
         if (payment.getStatus() == Payment.PaymentStatus.PAID) {
