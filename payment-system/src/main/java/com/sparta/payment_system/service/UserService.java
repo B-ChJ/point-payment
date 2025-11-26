@@ -1,6 +1,7 @@
 package com.sparta.payment_system.service;
 
 import com.sparta.payment_system.dto.MyInfoResponseDto;
+import com.sparta.payment_system.dto.PointBalanceResponseDto;
 import com.sparta.payment_system.entity.MembershipRank;
 import com.sparta.payment_system.entity.User;
 import com.sparta.payment_system.repository.UserRepository;
@@ -34,6 +35,18 @@ public class UserService {
                 user.getEmail(),
                 user.getName(),
                 user.getMembershipRank().name()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public PointBalanceResponseDto getMyPointBalance(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("사용자를 찾을 수 없습니다. userId: " + userId));
+
+        return new PointBalanceResponseDto(
+                user.getUserId(),
+                user.getEmail(),
+                user.getTotalPoints()
         );
     }
 }

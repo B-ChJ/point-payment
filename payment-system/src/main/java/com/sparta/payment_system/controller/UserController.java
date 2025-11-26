@@ -1,6 +1,7 @@
 package com.sparta.payment_system.controller;
 
 import com.sparta.payment_system.dto.MyInfoResponseDto;
+import com.sparta.payment_system.dto.PointBalanceResponseDto;
 import com.sparta.payment_system.entity.User;
 import com.sparta.payment_system.repository.ProductRepository;
 import com.sparta.payment_system.repository.UserRepository;
@@ -76,6 +77,18 @@ public class UserController {
     public ResponseEntity<MyInfoResponseDto> getMyInfo(@AuthenticationPrincipal CustomUserDetails customUserDetails) {
         Long userId = customUserDetails.getId();
         MyInfoResponseDto response = userService.getMyInfo(userId);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 내 보유 포인트 조회 API
+     */
+    @GetMapping("/users/me/points")
+    public ResponseEntity<PointBalanceResponseDto> getMyPoints(
+            @AuthenticationPrincipal CustomUserDetails customUserDetails
+    ) {
+        Long userId = customUserDetails.getId();
+        PointBalanceResponseDto response = userService.getMyPointBalance(userId);
         return ResponseEntity.ok(response);
     }
 
