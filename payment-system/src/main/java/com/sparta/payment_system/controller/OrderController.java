@@ -4,6 +4,7 @@ import com.sparta.payment_system.dto.order.OrderDetailRequestDto;
 import com.sparta.payment_system.dto.order.OrderDetailResponseDto;
 import com.sparta.payment_system.security.CustomUserDetails;
 import com.sparta.payment_system.service.OrderService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,7 +21,7 @@ public class OrderController {
     @PostMapping
     public ResponseEntity<OrderDetailResponseDto> createOrder(
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody OrderDetailRequestDto requestDto ) {
+            @Valid @RequestBody OrderDetailRequestDto requestDto ) {
         OrderDetailResponseDto responseDto = orderService.createOrder(userDetails.getId(), requestDto);
         return ResponseEntity.ok(responseDto);
     }
