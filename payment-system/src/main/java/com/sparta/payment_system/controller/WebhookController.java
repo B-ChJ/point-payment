@@ -49,7 +49,7 @@ public class WebhookController {
             return ResponseEntity.status(500).body("Error during processing");
         }
 
-        return ResponseEntity.ok("Webhook processed");
+        return ResponseEntity.ok("Webhook processed successfully");
     }
 }
 
