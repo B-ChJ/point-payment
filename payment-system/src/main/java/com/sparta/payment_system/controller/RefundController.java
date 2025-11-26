@@ -9,8 +9,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/refunds")
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/")
+@RequiredArgsConstructor
 public class RefundController {
 
     private final RefundRepository refundRepository;
