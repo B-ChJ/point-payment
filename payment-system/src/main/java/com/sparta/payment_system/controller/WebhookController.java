@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 public class WebhookController {
 
     private final PaymentService paymentService;
+    private final RefundService refundService;
 
     @PostMapping("/payment")
     public ResponseEntity<String> handleWebhook(@RequestBody WebhookRequestDto webhookRequest) {
