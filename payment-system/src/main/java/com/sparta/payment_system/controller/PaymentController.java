@@ -4,9 +4,10 @@ import com.sparta.payment_system.dto.payment.PaymentRequestDto;
 import com.sparta.payment_system.dto.payment.PaymentResponseDto;
 import com.sparta.payment_system.service.PaymentService;
 import com.sparta.payment_system.dto.payment.PortOnePaymentReadyResponseDto;
+import com.sparta.payment_system.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication; // Security import
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,36 +22,47 @@ public class PaymentController {
     public ResponseEntity<PortOnePaymentReadyResponseDto> createPayment(
             @PathVariable Long orderId,
             @RequestBody PaymentRequestDto requestDto,
-            Authentication authentication
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
 
-        // 현재 로그인된 사용자 ID를 추출하여 Service로 전달 (권한 검증용)
-        String currentUserIdentifier = authentication.getName();
+        Long currentUserId = userDetails.getId();
 
-        PortOnePaymentReadyResponseDto dto = paymentService.createPayment(
+        PortOnePaymentReadyResponseDto dto = paymentService.createPaymentReady(
+                currentUserId,
                 orderId,
-                requestDto,
-                currentUserIdentifier
+                requestDto
         );
 
         return ResponseEntity.ok(dto);
     }
 
-    // 2. 결제 성공 처리 (주로 클라이언트 측에서 요청)
+    // 2. 결제 성공 처리
     @PostMapping("/payments/complete")
     public ResponseEntity<PaymentResponseDto> completePayment(
-            @RequestParam String paymentKey,Authentication authentication) {
-        Long currentUserId = Long.parseLong(authentication.getName());
+            @RequestParam String paymentKey,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
 
-        PaymentResponseDto dto = paymentService.completePaymentByPaymentKey(paymentKey,currentUserId);
+
+        Long currentUserId = userDetails.getId();
+
+        PaymentResponseDto dto = paymentService.completePaymentVerification(
+                paymentKey,
+                currentUserId
+        );
         return ResponseEntity.ok(dto);
     }
 
     // 3. 결제 내역 조회
     @GetMapping("/payments/{paymentId}")
-    public ResponseEntity<PaymentResponseDto> getPayment(@PathVariable Long paymentId) {
+    public ResponseEntity<PaymentResponseDto> getPayment(
+            @PathVariable Long paymentId,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
 
-        PaymentResponseDto dto = paymentService.getPayment(paymentId);
+        Long currentUserId = userDetails.getId();
+
+
+        PaymentResponseDto dto = paymentService.getPaymentDetails(paymentId, currentUserId);
         return ResponseEntity.ok(dto);
     }
 }
