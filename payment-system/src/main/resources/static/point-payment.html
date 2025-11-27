@@ -298,12 +298,12 @@
             totalAmountInput.value = orderData.totalAmount || 0;
 
             // 포인트 조회 (userId 사용)
-            const pointData = await authenticatedFetch(`${API_BASE_URL}/api/users/${userId}/points`, { method: "GET" });
-            userPointInput.value = pointData.points || 0;
+            const pointData = await authenticatedFetch(`${API_BASE_URL}/api/users/me/points`, { method: "GET" });
+            userPointInput.value = pointData.totalPoints || 0;
 
             calculateFinalAmount();
 
-            paymentStatusDiv.innerHTML = `✅ 주문 정보 (ID: ${orderId}) 와 포인트 (${pointData.points}점) 가 적용되었습니다.`;
+            paymentStatusDiv.innerHTML = `✅ 주문 정보 (ID: ${orderId}) 와 포인트 (${pointData.totalPoints}점) 가 적용되었습니다.`;
             paymentStatusDiv.classList.remove('error', 'success');
 
         } catch (e) {

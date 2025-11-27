@@ -14,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -244,7 +243,6 @@ public class PaymentService {
                 .orElseThrow(() -> new IllegalArgumentException("Invalid userId"));
     }
 
-    @Transactional(readOnly = true)
     private Payment getPaymentByPaymentKey(String paymentKey) {
         return paymentRepository.findByPaymentKey(paymentKey)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid paymentKey"));
