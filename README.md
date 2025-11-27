@@ -14,6 +14,7 @@
 | 💳 Payment / External API | PortOne API                       |
 | 🏗 Build / Dependency Management | Gradle                            |
 | 🧪 API Testing | Postman                           |
+|🤖 CI/CD|GitHub Actions + AWS (EC2 / CodeDeploy)|
 | 🧠 IDE | IntelliJ IDEA                     |
 | 📌 Version Control | Git / GitHub                      |
 ---
@@ -22,38 +23,47 @@
 <summary>📂 View Full Folder Tree</summary>
 
 ```bash
-payment-system/
- ┣ .gradle/
- ┣ build/                  # 빌드 산출물
- ┣ docs/                   # ERD, Flowchart, API 명세 등 기술 문서
- ┣ gradle/
- ┣ scripts/                # 배포 스크립트 또는 자동화 스크립트
- ┣ src/
- ┃ ┗ main/
- ┃   ┣ java/
- ┃   ┃ ┗ com.sparta.payment_system/
- ┃   ┃   ┣ client/             # PortOne API HTTP Client
- ┃   ┃   ┃ ┗ PortOneClient.java
- ┃   ┃   ┣ config/             # 외부 API & 시스템 설정
- ┃   ┃   ┃ ┗ PortOneConfig.java
- ┃   ┃   ┣ controller/         # REST API 컨트롤러 레이어
- ┃   ┃   ┣ dto/                # Request/Response DTO 계층
- ┃   ┃   ┃ ┣ auth/             # 로그인/회원 관련 DTO
- ┃   ┃   ┃ ┣ order/            # 주문 관련 DTO
- ┃   ┃   ┃ ┣ payment/          # 결제 요청/응답 DTO
- ┃   ┃   ┃ ┣ product/          # 상품 응답 DTO
- ┃   ┃   ┃ ┣ refund/           # 환불 관련 DTO
- ┃   ┃   ┃ ┗ webhook/          # PortOne Webhook 응답 DTO
- ┃   ┃   ┣ entity/             # JPA Entity
- ┃   ┃   ┣ repository/         # Spring Data JPA Repository
- ┃   ┃   ┣ security/           # 인증/인가, JWT 필터 및 설정
- ┃   ┃   ┣ service/            # 핵심 비즈니스 로직 레이어
- ┃   ┃   ┗ PaymentSystemApplication.java
- ┃   ┗ resources/
- ┃       ┣ application.yml     # DB, JWT, PortOne 설정값 포함
- ┃       ┗ static/             # 정적 리소스 (선택)
- ┣ .gitattributes
- ┗ .gitignore
+point-payment/
+ ┣ .github/
+ ┃ ┗ workflows/             # CI/CD 자동화 설정
+ ┃     ┣ ci.yml             # 코드 품질 검사/빌드/테스트 CI
+ ┃     ┗ cd.yml             # AWS/서버 배포 CD
+ ┣ payment-system/
+ ┃ ┣ .gradle/
+ ┃ ┣ build/                 # 빌드 산출물
+ ┃ ┣ docs/                  # 시스템 문서 매뉴얼
+ ┃ ┣ gradle/
+ ┃ ┣ scripts/               # 배포 스크립트
+ ┃ ┣ src/
+ ┃ ┃ ┗ main/
+ ┃ ┃   ┣ java/com.sparta.payment_system/
+ ┃ ┃   ┃ ┣ client/          # PortOne API 연동 HTTP Client
+ ┃ ┃   ┃ ┣ config/          # 외부 API & 애플리케이션 설정
+ ┃ ┃   ┃ ┣ controller/      # REST API 진입 레이어
+ ┃ ┃   ┃ ┣ dto/             # Request & Response DTO
+ ┃ ┃   ┃ ┃ ┣ auth/
+ ┃ ┃   ┃ ┃ ┣ order/
+ ┃ ┃   ┃ ┃ ┣ payment/
+ ┃ ┃   ┃ ┃ ┣ product/
+ ┃ ┃   ┃ ┃ ┣ refund/
+ ┃ ┃   ┃ ┃ ┗ webhook/
+ ┃ ┃   ┃ ┣ entity/          # JPA Entity 정의
+ ┃ ┃   ┃ ┣ repository/      # Spring Data JPA Repository
+ ┃ ┃   ┃ ┣ security/        # JWT 인증 필터 + 권한 정책
+ ┃ ┃   ┃ ┣ service/         # 핵심 도메인 비즈니스 로직
+ ┃ ┃   ┃ ┗ PaymentSystemApplication.java
+ ┃ ┃   ┗ resources/
+ ┃ ┃     ┣ application.yml   # 환경 설정
+ ┃ ┃     ┗ static/           # 정적 리소스
+ ┃ ┣ .gitignore
+ ┃ ┣ build.gradle
+ ┃ ┣ Dockerfile              # Docker 빌드 설정
+ ┃ ┣ appsec.yml             # AWS CodeDeploy 설정
+ ┃ ┗ README.md
+ ┣ README.md                # 저장소 메인 문서
+ ┣ .gitignore
+ ┗ .gitattributes
+
  ```
 </details> 
 
@@ -142,7 +152,7 @@ git clone https://github.com/B-ChJ/point-payment.git
 - 포인트 잔액 조회
 ---
 ## 🧱 ERD 다이어그램
-![ERD](./docs/images/ERD.png)
+![ERD](payment-system/docs/images/ERD.png)
 <details>
 <summary>📎 ERD 관계 구조 보기</summary>
 
@@ -157,11 +167,12 @@ PointTransactions (N) ─── (1) Orders
 Users (1) ─── (1) MembershipLevel
 Products (1) ─── (N) StockAlert
 ```
+
 </details>
 
 ---
 ## 🧭 시스템 처리 흐름 (Flow Chart)
-![Flowchart](./docs/images/flowchart.png)
+![Flowchart](payment-system/docs/images/flowchart.png)
 
 
 ---
