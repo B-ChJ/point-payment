@@ -167,6 +167,7 @@ PointTransactions (N) ─── (1) Orders
 Users (1) ─── (1) MembershipLevel
 Products (1) ─── (N) StockAlert
 ```
+
 </details>
 
 ---
