@@ -152,7 +152,7 @@ git clone https://github.com/B-ChJ/point-payment.git
 - 포인트 잔액 조회
 ---
 ## 🧱 ERD 다이어그램
-![ERD](./docs/images/ERD.png)
+![ERD](payment-system/docs/images/ERD.png)
 <details>
 <summary>📎 ERD 관계 구조 보기</summary>
 
@@ -172,7 +172,7 @@ Products (1) ─── (N) StockAlert
 
 ---
 ## 🧭 시스템 처리 흐름 (Flow Chart)
-![Flowchart](./docs/images/flowchart.png)
+![Flowchart](payment-system/docs/images/flowchart.png)
 
 
 ---
