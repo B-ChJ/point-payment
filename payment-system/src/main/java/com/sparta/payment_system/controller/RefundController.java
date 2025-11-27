@@ -1,118 +1,44 @@
 package com.sparta.payment_system.controller;
 
-import com.sparta.payment_system.entity.Refund;
-import com.sparta.payment_system.entity.Payment;
-import com.sparta.payment_system.dto.RefundRequestDto;
-import com.sparta.payment_system.repository.RefundRepository;
-import com.sparta.payment_system.repository.PaymentRepository;
-import com.sparta.payment_system.service.PaymentService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
+import com.sparta.payment_system.dto.refund.RefundRequestDto;
+import com.sparta.payment_system.dto.refund.RefundResponseDto;
+import com.sparta.payment_system.security.CustomUserDetails;
+import com.sparta.payment_system.service.RefundService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Mono;
 
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
-
+/**
+ * 환불(Refund) 관련 HTTP 요청을 처리하는 컨트롤러입니다.
+ * 사용자 요청에 의한 환불을 처리합니다.
+ */
 @RestController
-@RequestMapping("/api/refunds")
-@CrossOrigin(origins = "*")
+@RequestMapping("/api")
+@RequiredArgsConstructor
 public class RefundController {
-    
-    private final RefundRepository refundRepository;
-    private final PaymentRepository paymentRepository;
-    private final PaymentService paymentService;
-    
-    @Autowired
-    public RefundController(RefundRepository refundRepository, PaymentRepository paymentRepository, PaymentService paymentService) {
-        this.refundRepository = refundRepository;
-        this.paymentRepository = paymentRepository;
-        this.paymentService = paymentService;
-    }
-    
-    
-    // 환불 요청 API (PortOne API 호출 + DB 반영)
-    @PostMapping("/request")
-    public Mono<ResponseEntity<String>> requestRefund(@RequestBody RefundRequestDto refundRequest) {
-        try {
-            System.out.println("환불 요청 받음: " + refundRequest);
-            
-            // 1. 결제 정보 조회 및 검증
-            Optional<Payment> paymentOptional = paymentRepository.findById(refundRequest.getPaymentId());
-            if (paymentOptional.isEmpty()) {
-                return Mono.just(ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body("결제 정보를 찾을 수 없습니다. Payment ID: " + refundRequest.getPaymentId()));
-            }
-            
-            Payment payment = paymentOptional.get();
-            
-            // 2. 환불 가능 상태 확인
-            if (payment.getStatus() != Payment.PaymentStatus.PAID && 
-                payment.getStatus() != Payment.PaymentStatus.PARTIALLY_REFUNDED) {
-                return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("환불할 수 없는 결제 상태입니다. 현재 상태: " + payment.getStatus()));
-            }
-            
-            // 3. 환불 금액 설정 (부분 환불 또는 전체 환불)
-            final BigDecimal refundAmount = refundRequest.getAmount() != null ? 
-                    refundRequest.getAmount() : payment.getAmount();
-            
-            // 4. 환불 금액 검증
-            if (refundAmount.compareTo(BigDecimal.ZERO) <= 0 || 
-                refundAmount.compareTo(payment.getAmount()) > 0) {
-                return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body("잘못된 환불 금액입니다. 환불 금액: " + refundAmount + ", 결제 금액: " + payment.getAmount()));
-            }
-            
-            // 5. PortOne API로 환불 요청
-            final String reason = refundRequest.getReason() != null ? refundRequest.getReason() : "사용자 요청에 의한 환불";
-            
-            return paymentService.cancelPayment(payment.getImpUid(), reason)
-                    .map(isSuccess -> {
-                        if (isSuccess) {
-                            // 6. 환불 성공 시 DB에 환불 정보 저장
-                            try {
-                                Refund refund = new Refund();
-                                refund.setPaymentId(payment.getPaymentId());
-                                refund.setAmount(refundAmount);
-                                refund.setReason(reason);
-                                refund.setStatus(Refund.RefundStatus.COMPLETED);
-                                
-                                refundRepository.save(refund);
-                                
-                                // 7. 결제 상태 업데이트
-                                if (refundAmount.compareTo(payment.getAmount()) >= 0) {
-                                    payment.setStatus(Payment.PaymentStatus.REFUNDED);
-                                } else {
-                                    payment.setStatus(Payment.PaymentStatus.PARTIALLY_REFUNDED);
-                                }
-                                paymentRepository.save(payment);
-                                
-                                System.out.println("환불 처리 완료 - Payment ID: " + payment.getPaymentId() + 
-                                        ", Refund Amount: " + refundAmount);
-                                
-                                return ResponseEntity.ok("환불이 성공적으로 처리되었습니다. 환불 금액: " + refundAmount);
-                            } catch (Exception e) {
-                                System.err.println("환불 DB 저장 중 오류: " + e.getMessage());
-                                e.printStackTrace();
-                                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                        .body("환불은 성공했으나 DB 저장 중 오류가 발생했습니다: " + e.getMessage());
-                            }
-                        } else {
-                            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                                    .body("PortOne 환불 요청이 실패했습니다.");
-                        }
-                    })
-                    .onErrorReturn(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                            .body("환불 처리 중 오류가 발생했습니다."));
-                            
-        } catch (Exception e) {
-            System.err.println("환불 요청 처리 중 오류: " + e.getMessage());
-            e.printStackTrace();
-            return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("환불 요청 처리 중 오류가 발생했습니다: " + e.getMessage()));
-        }
+
+    private final RefundService refundService;
+
+    /**
+     * 특정 결제 건에 대해 환불을 요청합니다.
+     * 인증된 사용자의 권한을 확인하고 PG사 환불 및 내부 시스템 후처리를 진행합니다.
+     */
+    @PostMapping("/payments/{paymentId}/refund")
+    public ResponseEntity<RefundResponseDto> createRefund(
+            @PathVariable Long paymentId,
+            @RequestBody RefundRequestDto requestDto,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        // 경로 변수로 받은 paymentId를 DTO에 설정합니다.
+        requestDto.setPaymentId(paymentId);
+
+        // 현재 로그인된 사용자 ID 추출 (Authentication.getName()이 일반적으로 principal의 ID를 반환한다고 가정)
+        Long currentUserId = userDetails.getId();
+
+        // RefundService 호출
+        RefundResponseDto responseDto = refundService.createRefund(requestDto, currentUserId);
+        return ResponseEntity.ok(responseDto);
     }
 }

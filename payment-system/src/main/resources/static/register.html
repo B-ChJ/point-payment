@@ -266,11 +266,11 @@
                     name: data.name
                 });
 
-                showResult('success', '회원가입 성공! 페이지로 이동합니다...');
+                showResult('success', '회원가입 성공! 로그인 페이지로 이동합니다...');
                 
                 // 1초 후 메인 페이지로 이동
                 setTimeout(() => {
-                    window.location.href = 'point-payment.html';
+                    window.location.href = 'login.html';
                 }, 1000);
             } else {
                 showResult('error', data.error || '회원가입에 실패했습니다.');

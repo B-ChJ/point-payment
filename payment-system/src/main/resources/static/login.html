@@ -189,10 +189,27 @@
 </div>
 
 <script>
-    const API_BASE_URL = '';
+    // ⚠️ 주의: API_BASE_URL은 실제 백엔드 주소로 설정해야 합니다. (예: 'http://localhost:8080')
+    const API_BASE_URL = 'http://localhost:8080'; // API_BASE_URL을 명확히 설정합니다.
+
+    // 🌟🌟🌟 핵심 수정 1: 페이지 로드 시 Local Storage의 인증 정보 강제 초기화 🌟🌟🌟
+    // 이 코드는 Spring Security 필터가 토큰을 인식하기 전에 클라이언트 상태를 깨끗하게 만듭니다.
+    (function initializeAuthAndCleanUp() {
+        const tokenKey = 'authToken'; // 사용자가 설정한 키
+        const existingToken = localStorage.getItem(tokenKey);
+
+        // Local Storage에 토큰이 있다면 제거
+        if (existingToken) {
+            console.warn(`[Cleanup] 기존 인증 토큰 (${tokenKey})이 감지되어 제거되었습니다.`);
+            removeAuthToken(); // 아래 정의된 함수 사용
+        }
+    })();
+    // 🌟🌟🌟 ----------------------------------------------------------------- 🌟🌟🌟
+
 
     // JWT 토큰 관리
     function setAuthToken(token, userData) {
+        // 기존 'authToken' 키 사용
         localStorage.setItem('authToken', token);
         localStorage.setItem('userId', userData.userId);
         localStorage.setItem('userEmail', userData.email);
@@ -241,6 +258,7 @@
             const data = await response.json();
 
             if (response.ok) {
+                // 토큰과 사용자 정보를 저장
                 setAuthToken(data.token, {
                     userId: data.userId,
                     email: data.email,
@@ -248,12 +266,13 @@
                 });
 
                 showResult('success', '로그인 성공! 페이지로 이동합니다...');
-                
+
                 // 1초 후 메인 페이지로 이동
                 setTimeout(() => {
                     window.location.href = 'point-payment.html';
                 }, 1000);
             } else {
+                // 401 Unauthorized 등의 에러 처리
                 showResult('error', data.error || '로그인에 실패했습니다.');
                 loginButton.disabled = false;
                 loginButton.textContent = '로그인';
@@ -273,13 +292,12 @@
         }
     });
 
-    // 이미 로그인되어 있는지 확인
+    // 🌟🌟🌟 핵심 수정 2: window.onload의 자동 리다이렉트 로직 제거 🌟🌟🌟
+    // 이 코드를 제거함으로써 Spring Security 필터에게 인증 책임을 넘깁니다.
     window.addEventListener('load', function() {
-        const token = localStorage.getItem('authToken');
-        if (token) {
-            // 이미 로그인되어 있으면 메인 페이지로 이동
-            window.location.href = 'point-payment.html';
-        }
+        // 토큰 재발급 로직 (Refresh Token 관련)이 필요하다면 여기에 재구현해야 합니다.
+        // 현재는 자동 리다이렉트를 유발하던 코드를 제거하는 데 초점을 맞춥니다.
+        console.log("로그인 페이지 로드 완료. 자동 리다이렉트 로직 제거됨.");
     });
 </script>
 </body>
