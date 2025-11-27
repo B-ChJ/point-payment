@@ -26,4 +26,11 @@ public class ProductService {
 
         return ProductCreateResponseDto.from(product);
     }
+
+    public ProductCreateResponseDto getProductInfo(Long id) {
+        Product product = productRepository.findById(id).orElseThrow(
+                () -> new RuntimeException("존재하지 않는 상품입니다."));
+
+        return ProductCreateResponseDto.from(product);
+    }
 }

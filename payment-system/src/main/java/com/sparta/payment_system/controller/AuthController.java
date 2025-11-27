@@ -68,10 +68,16 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<LogoutResponseDto> logout(HttpServletRequest request) {
+    public ResponseEntity<LogoutResponseDto> logout(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = getTokenFromCookie(request);
 
         LogoutResponseDto result = blacklistService.addLogoutToken(refreshToken);
+        // Refresh Token 쿠키 삭제
+        Cookie cookie = new Cookie("refreshToken", null);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        response.addCookie(cookie);
 
         return ResponseEntity.ok(result);
     }
