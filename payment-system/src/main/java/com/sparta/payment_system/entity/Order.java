@@ -1,6 +1,5 @@
 package com.sparta.payment_system.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,8 +37,8 @@ public class Order {
     @Column(name = "created_at",nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @OneToMany
+    @JoinColumn(name = "order_id")
     private List<OrderItem> orderItems = new ArrayList<>();
 
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
@@ -53,7 +52,11 @@ public class Order {
         this.userId = userId;
     }
 
-    public void updateAmount(BigDecimal amount) {
+    public void setAmount(BigDecimal amount) {
         this.totalAmount = amount;
+    }
+
+    public void setOrderItem(OrderItem orderItem) {
+        this.orderItems.add(orderItem);
     }
 }

@@ -6,21 +6,19 @@ import com.sparta.payment_system.service.BlacklistService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 
 @RestController
 @RequestMapping("/api/auth")
-@AllArgsConstructor
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final AuthService authService;
@@ -50,8 +48,7 @@ public class AuthController {
         response.setHeader(HttpHeaders.AUTHORIZATION, accessToken);
         response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        return ResponseEntity.status(HttpStatus.OK).body(
-                new LoginResponseDto(accessToken, result.getUser()));
+        return ResponseEntity.ok(new LoginResponseDto(accessToken, result.getUser()));
     }
 
     @PostMapping("/refresh")
@@ -64,19 +61,25 @@ public class AuthController {
         }
 
         RefreshResponseDto result = authService.refresh(refreshToken);
-        if (result == null) { return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(null); }
+        if (result == null) { return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); }
         response.setHeader(HttpHeaders.AUTHORIZATION, result.getToken());
 
-        return ResponseEntity.status(HttpStatus.OK).body(result);
+        return ResponseEntity.ok(result);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<LogoutResponseDto> logout(HttpServletRequest request) {
+    public ResponseEntity<LogoutResponseDto> logout(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = getTokenFromCookie(request);
 
         LogoutResponseDto result = blacklistService.addLogoutToken(refreshToken);
+        // Refresh Token 쿠키 삭제
+        Cookie cookie = new Cookie("refreshToken", null);
+        cookie.setMaxAge(0);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        response.addCookie(cookie);
 
-        return ResponseEntity.status(HttpStatus.OK).body(result);
+        return ResponseEntity.ok(result);
     }
 
     private String getTokenFromCookie(HttpServletRequest request) {

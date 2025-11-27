@@ -1,18 +1,25 @@
-
 package com.sparta.payment_system.service;
 
 import com.sparta.payment_system.client.PortOneClient;
-import com.sparta.payment_system.dto.payment.PaymentVerificationDto; // 💡 DTO Import
+import com.sparta.payment_system.dto.payment.PaymentRequestDto;
+import com.sparta.payment_system.dto.payment.PaymentResponseDto;
+import com.sparta.payment_system.dto.payment.PaymentVerificationDto;
+import com.sparta.payment_system.dto.payment.PortOnePaymentReadyResponseDto;
 import com.sparta.payment_system.entity.*;
 import com.sparta.payment_system.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
+/**
+ * 결제 플로우 전반을 관리하고 비즈니스 로직을 처리하는 서비스입니다.
+ */
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -20,27 +27,37 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
-    private final RefundRepository refundRepository;
-    private final PointTransactionRepository pointTransactionRepository;
-
-    // 재고 관리 및 결제 검증을 위한 의존성
     private final ProductRepository productRepository;
+    private final PointTransactionRepository pointTransactionRepository;
     private final PortOneClient portOneClient;
 
+
     /**
-     * 결제 생성 및 준비
-     * - 재고 확인
-     * - 포인트 사용 계산
-     * - Payment 엔티티 생성 (FAILED 상태)
+     * 외부 결제를 위해 결제 준비 정보를 생성하고 저장합니다.
+     * 재고, 포인트 사용을 검증하여 최종 결제 금액을 확정합니다.
+     *
+     * @param userId 사용자 ID
+     * @param orderId 주문 ID
+     * @param requestDto 결제 요청 DTO (포인트 사용 여부)
+     * @return PortOne 결제 준비 응답 DTO
      */
     @Transactional
-    public Payment createPayment(Long orderId, boolean usePoints) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid orderId"));
-        User user = userRepository.findById(order.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid userId"));
+    public PortOnePaymentReadyResponseDto createPaymentReady(
+            Long userId,
+            Long orderId,
+            PaymentRequestDto requestDto
+    ) {
 
-        // 1. 재고 사전 확인
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new SecurityException("인증된 사용자(ID: " + userId + ")를 찾을 수 없습니다."));
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
+
+        if (!order.getUserId().equals(userId)) {
+            throw new SecurityException("해당 주문에 대한 결제 권한이 없습니다.");
+        }
+
         for (OrderItem item : order.getOrderItems()) {
             if (item.getProduct().getStock() < item.getQuantity()) {
                 throw new IllegalStateException("재고 부족: " + item.getProduct().getName());
@@ -49,201 +66,186 @@ public class PaymentService {
 
         BigDecimal totalAmount = order.getTotalAmount();
         BigDecimal pointsUsed = BigDecimal.ZERO;
+        BigDecimal finalPaymentAmount = totalAmount;
 
-        // 2. 포인트 사용 로직
-        if (usePoints) {
+        if (requestDto.isUsePoint()) {
             pointsUsed = user.getTotalPoints().min(totalAmount);
-            totalAmount = totalAmount.subtract(pointsUsed);
+            finalPaymentAmount = totalAmount.subtract(pointsUsed);
         }
 
-        Payment payment = new Payment();
-        payment.setOrder(order);
-        payment.setAmount(totalAmount);
+
+        Optional<Payment> existingPayment = paymentRepository.findByOrder_OrderId(orderId);
+
+        Payment payment;
+        if (existingPayment.isPresent()) {
+
+            payment = existingPayment.get();
+        } else {
+            payment = new Payment();
+            payment.setOrder(order);
+        }
+
+        payment.setAmount(finalPaymentAmount);
         payment.setPointsUsed(pointsUsed);
         payment.setDiscountAmount(BigDecimal.ZERO);
+
+
         payment.setStatus(Payment.PaymentStatus.FAILED);
+
         payment.setMethodId(Payment.PaymentMethod.CARD.getId());
 
-        return paymentRepository.save(payment);
+        String newPaymentKey = "T" + System.currentTimeMillis() + orderId;
+        payment.setPaymentKey(newPaymentKey);
+
+        Payment savedPayment = paymentRepository.save(payment);
+
+        PortOnePaymentReadyResponseDto readyInfo = new PortOnePaymentReadyResponseDto();
+        readyInfo.setPaymentId(savedPayment.getPaymentId());
+        readyInfo.setPaymentKey(newPaymentKey);
+        readyInfo.setAmount(finalPaymentAmount);
+
+        String orderName = order.getOrderItems().get(0).getProduct().getName();
+        if (order.getOrderItems().size() > 1) {
+            orderName += " 외 " + (order.getOrderItems().size() - 1) + "건";
+        }
+        readyInfo.setOrderName(orderName);
+
+        return readyInfo;
     }
 
-
+    /**
+     * PortOne과 최종 검증 후, 결제 완료 후처리를 진행합니다.
+     * 재고 차감, 포인트 처리, 주문 상태 변경, 멤버십 업데이트를 포함합니다.
+     *
+     * @param paymentKey PortOne 결제 고유 키
+     * @param currentUserId 현재 사용자 ID
+     * @return 결제 완료 응답 DTO
+     */
     @Transactional
-    public Payment completePayment(Long paymentId) {
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid paymentId"));
+    public PaymentResponseDto completePaymentVerification(String paymentKey , Long currentUserId) {
 
-        if (payment.getStatus() == Payment.PaymentStatus.PAID) return payment;
+        Payment payment = getPaymentByPaymentKey(paymentKey);
+        User user = getUserByPayment(payment);
 
-        // 1. PortOne 결제 검증 )
+
+        if (currentUserId != null) {
+            if (!payment.getOrder().getUserId().equals(currentUserId)) {
+                throw new SecurityException("해당 결제 건에 대한 권한이 없습니다.");
+            }
+        }
+
+
+        if (payment.getStatus() == Payment.PaymentStatus.PAID) {
+            return convertToPaymentResponseDto(payment, user, user.getMembershipRank().name(), user.getMembershipRank().name());
+        }
 
         PaymentVerificationDto verification = portOneClient.getPayment(payment.getPaymentKey());
 
-        if (verification == null) {
-            throw new IllegalStateException("PortOne에서 결제 정보를 찾을 수 없습니다.");
-        }
-
-        // 금액 비교
-        if (payment.getAmount().compareTo(verification.getAmount()) != 0) {
+        if (!"Paid".equalsIgnoreCase(verification.getStatus())) {
             payment.setStatus(Payment.PaymentStatus.FAILED);
             paymentRepository.save(payment);
-            throw new IllegalStateException("결제 금액 불일치 (위변조 의심)");
+            throw new IllegalStateException("결제 검증 실패 또는 금액 불일치.");
         }
 
-        // PortOne 상태 확인
-        if (!"paid".equalsIgnoreCase(verification.getStatus())) {
-            throw new IllegalStateException("PortOne 결제 상태가 PAID가 아닙니다: " + verification.getStatus());
+        if (payment.getAmount().compareTo(verification.getAmount()) != 0) {
+            cancelPaymentIfNecessary(payment.getPaymentKey(), "금액 위변조 감지");
+            payment.setStatus(Payment.PaymentStatus.FAILED);
+            paymentRepository.save(payment);
+            throw new IllegalStateException("결제 금액 불일치. 위변조 가능성.");
         }
 
-        // 2. 내부 상태 업데이트
+        String prevRank = user.getMembershipRank().name();
+
+        processPostPaymentActions(payment, payment.getOrder(), user);
+
         payment.setStatus(Payment.PaymentStatus.PAID);
         payment.setPaidAt(LocalDateTime.now());
+        paymentRepository.save(payment);
 
-        // 3. 주문 상태 동기화
-        Order order = payment.getOrder();
-        order.setStatus(Order.OrderStatus.COMPLETED);
-        orderRepository.save(order);
+        return convertToPaymentResponseDto(payment, user, prevRank, user.getMembershipRank().name());
+    }
 
-        // 4. 재고 실차감 로직
-        for (OrderItem item : order.getOrderItems()) {
-            Product product = item.getProduct();
-            int newStock = product.getStock() - item.getQuantity();
-            if (newStock < 0) {
-                throw new IllegalStateException("재고 부족으로 결제 완료 불가");
-            }
-            product.setStock(newStock);
-            productRepository.save(product);
-        }
-
+    /**
+     * 특정 결제 내역의 상세 정보를 조회합니다.
+     *
+     * @param paymentId 결제 ID
+     * @param currentUserId 현재 사용자 ID
+     * @return 결제 응답 DTO
+     */
+    @Transactional(readOnly = true)
+    public PaymentResponseDto getPaymentDetails(Long paymentId, Long currentUserId) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid paymentId: " + paymentId));
         User user = getUserByPayment(payment);
 
-        // 5. 사용 포인트 차감
-        if (payment.getPointsUsed().compareTo(BigDecimal.ZERO) > 0) {
-            user.setTotalPoints(user.getTotalPoints().subtract(payment.getPointsUsed()));
-            createPointTransaction(user, payment.getPointsUsed(), PointTransaction.PointType.USED);
+
+        if (!payment.getOrder().getUserId().equals(currentUserId)) {
+            throw new SecurityException("해당 결제 내역을 조회할 권한이 없습니다.");
         }
 
-        // 6. 포인트 적립 (결제 금액의 1%)
-        BigDecimal earnedPoints = payment.getAmount().multiply(new BigDecimal("0.01"));
-        if (earnedPoints.compareTo(BigDecimal.ZERO) > 0) {
-            user.setTotalPoints(user.getTotalPoints().add(earnedPoints));
-            createPointTransaction(user, earnedPoints, PointTransaction.PointType.EARNED);
-        }
-
-        userRepository.save(user); // 포인트 변경사항 저장
-        updateMembershipLevel(user);
-
-        return paymentRepository.save(payment);
+        return convertToPaymentResponseDto(payment, user, user.getMembershipRank().name(), user.getMembershipRank().name());
     }
 
-
+    /**
+     * 특정 결제를 실패 상태로 처리하고, 관련된 주문을 취소 상태로 변경합니다.
+     *
+     * @param paymentKey 결제 고유 키
+     */
     @Transactional
-    public Payment completePaymentByPaymentKey(String paymentKey) {
-        // 1. paymentKey로 Payment 엔티티 조회 (getPaymentByPaymentKey는 이미 구현되어 있다고 가정)
+    public void failPaymentByPaymentKey(String paymentKey) {
         Payment payment = getPaymentByPaymentKey(paymentKey);
 
-        // 2. 조회된 Payment ID로 기존의 복잡한 완료 처리 로직 호출
-        return completePayment(payment.getPaymentId());
-    }
+        if (payment.getStatus() == Payment.PaymentStatus.PAID) {
+            throw new IllegalStateException("이미 PAID된 결제는 실패 처리할 수 없습니다.");
+        }
 
-    // PaymentService.java 내부에 추가
-
-
-    @Transactional(readOnly = true)
-    public Payment getPayment(Long paymentId) {
-        return paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid paymentId: " + paymentId));
-    }
-
-    @Transactional
-    public Payment failPayment(Long paymentId) {
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid paymentId"));
         payment.setStatus(Payment.PaymentStatus.FAILED);
 
-        // 실패 시 주문 상태 동기화
         Order order = payment.getOrder();
         if (order != null) {
             order.setStatus(Order.OrderStatus.CANCELLED);
             orderRepository.save(order);
         }
 
-        return paymentRepository.save(payment);
-    }
-
-
-    @Transactional
-    public Refund refundPayment(Long paymentId, String reason) {
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid paymentId"));
-
-        return processRefundLogic(payment, reason);
-    }
-
-
-    @Transactional
-    public Mono<Boolean> cancelPayment(String paymentKey, String reason) {
-        return Mono.fromCallable(() -> {
-            Payment payment = paymentRepository.findByPaymentKey(paymentKey)
-                    .orElseThrow(() -> new IllegalArgumentException("Invalid paymentKey"));
-
-            if (payment.getStatus() != Payment.PaymentStatus.PAID) {
-                return false;
-            }
-
-            processRefundLogic(payment, reason);
-            return true;
-        });
-    }
-
-
-    private Refund processRefundLogic(Payment payment, String reason) {
-        if (payment.getStatus() != Payment.PaymentStatus.PAID)
-            throw new IllegalStateException("Payment is not completed, cannot refund");
-
-        // 1. Refund 기록 생성
-        Refund refund = new Refund();
-        refund.setPayment(payment);
-        refund.setAmount(payment.getAmount());
-        refund.setReason(reason);
-        refund.setStatus(Refund.RefundStatus.COMPLETED); // 즉시 완료 처리
-        refundRepository.save(refund);
-
-        // 2. Payment 상태 변경
-        payment.setStatus(Payment.PaymentStatus.REFUNDED);
         paymentRepository.save(payment);
+    }
 
-        // 3. 주문 상태 동기화
-        Order order = payment.getOrder();
-        order.setStatus(Order.OrderStatus.CANCELLED);
+    private void processPostPaymentActions(Payment payment, Order order, User user) {
+        order.setStatus(Order.OrderStatus.COMPLETED);
         orderRepository.save(order);
 
-        // 4. 재고 복구
         for (OrderItem item : order.getOrderItems()) {
             Product product = item.getProduct();
-            product.setStock(product.getStock() + item.getQuantity());
+            int newStock = product.getStock() - item.getQuantity();
+            if (newStock < 0) throw new IllegalStateException("재고 부족으로 결제 완료 불가");
+            product.setStock(newStock);
             productRepository.save(product);
         }
 
-        User user = getUserByPayment(payment);
-
-        // 5. 사용 포인트 복구
         if (payment.getPointsUsed().compareTo(BigDecimal.ZERO) > 0) {
-            user.setTotalPoints(user.getTotalPoints().add(payment.getPointsUsed()));
-            createPointTransaction(user, payment.getPointsUsed(), PointTransaction.PointType.EARNED); // 혹은 RESTORED
+            user.setTotalPoints(user.getTotalPoints().subtract(payment.getPointsUsed()));
+            createPointTransaction(user, payment.getPointsUsed(), PointTransaction.PointType.USED);
         }
-
-        // 6. 적립 포인트 회수
         BigDecimal earnedPoints = payment.getAmount().multiply(new BigDecimal("0.01"));
         if (earnedPoints.compareTo(BigDecimal.ZERO) > 0) {
-            user.setTotalPoints(user.getTotalPoints().subtract(earnedPoints));
-            createPointTransaction(user, earnedPoints, PointTransaction.PointType.USED); // 혹은 DEDUCTED
+            user.setTotalPoints(user.getTotalPoints().add(earnedPoints));
+            createPointTransaction(user, earnedPoints, PointTransaction.PointType.EARNED);
         }
-
         userRepository.save(user);
-        updateMembershipLevel(user);
 
-        return refund;
+        updateMembershipLevel(user);
+    }
+
+    private User getUserByPayment(Payment payment) {
+        Order order = payment.getOrder();
+        if (order == null) throw new IllegalArgumentException("Payment has no associated order");
+        return userRepository.findById(order.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("Invalid userId"));
+    }
+
+    private Payment getPaymentByPaymentKey(String paymentKey) {
+        return paymentRepository.findByPaymentKey(paymentKey)
+                .orElseThrow(() -> new IllegalArgumentException("Invalid paymentKey"));
     }
 
 
@@ -256,37 +258,71 @@ public class PaymentService {
         pointTransactionRepository.save(transaction);
     }
 
-    private User getUserByPayment(Payment payment) {
-        Order order = payment.getOrder();
-        if (order == null) throw new IllegalArgumentException("Payment has no associated order");
-        return userRepository.findById(order.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid userId"));
-    }
-
     private void updateMembershipLevel(User user) {
-        BigDecimal totalSpent = paymentRepository.findAllByOrderUserId(user.getUserId())
+        BigDecimal totalSpentBigDecimal = paymentRepository.findAllByOrderUserId(user.getUserId())
                 .stream()
                 .filter(p -> p.getStatus() == Payment.PaymentStatus.PAID)
                 .map(Payment::getAmount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        if (totalSpent.compareTo(new BigDecimal("100000")) >= 0) {
-            user.setMembershipRank(MembershipRank.VVIP);
-        } else if (totalSpent.compareTo(new BigDecimal("50000")) >= 0) {
-            user.setMembershipRank(MembershipRank.VIP);
-        } else {
-            user.setMembershipRank(MembershipRank.NORMAL);
-        }
+        long totalPaid = totalSpentBigDecimal.longValue();
+        MembershipRank newRank = MembershipRank.fromTotalPaid(totalPaid);
 
+        user.setMembershipRank(newRank);
         userRepository.save(user);
     }
 
-    @Transactional(readOnly = true)
-    public Payment getPaymentByPaymentKey(String paymentKey) {
-        return paymentRepository.findByPaymentKey(paymentKey)
-                .orElseThrow(() -> new IllegalArgumentException("Invalid paymentKey"));
+    private void cancelPaymentIfNecessary(String paymentKey, String reason) {
+        try {
+            String accessToken = portOneClient.getAccessToken();
+            portOneClient.cancelPayment(paymentKey, accessToken, reason);
+        } catch (Exception e) {
+
+            System.err.println("PortOne 취소 요청 실패 (결제 키: " + paymentKey + "): " + e.getMessage());
+        }
+    }
+
+
+    private PaymentResponseDto convertToPaymentResponseDto(
+            Payment payment,
+            User user,
+            String previousMembershipRank,
+            String updatedMembershipRank) {
+
+        PaymentResponseDto dto = new PaymentResponseDto();
+
+        dto.setPaymentId(payment.getPaymentId() != null ? payment.getPaymentId().toString() : null);
+        dto.setOrderId(payment.getOrder() != null ? payment.getOrder().getOrderId().toString() : null);
+        dto.setUserId(user.getUserId());
+        dto.setTotalAmount(payment.getAmount());
+        dto.setStatus(payment.getStatus().name());
+        dto.setCreatedAt(payment.getCreatedAt());
+        dto.setUpdatedAt(payment.getUpdatedAt());
+
+        dto.setUsePoint(payment.getPointsUsed().compareTo(BigDecimal.ZERO) > 0);
+        dto.setUsedPointAmount(payment.getPointsUsed());
+        dto.setEarnedPointAmount(payment.getStatus() == Payment.PaymentStatus.PAID ?
+                payment.getAmount().multiply(new BigDecimal("0.01")) : BigDecimal.ZERO);
+        dto.setFinalPointBalance(user.getTotalPoints());
+
+        dto.setPreviousMembershipRank(previousMembershipRank);
+        dto.setUpdatedMembershipRank(updatedMembershipRank);
+
+        if (payment.getOrder() != null && payment.getOrder().getOrderItems() != null) {
+            dto.setOrderItems(payment.getOrder().getOrderItems().stream()
+                    .map(item -> {
+                        PaymentResponseDto.OrderItemInfo info = new PaymentResponseDto.OrderItemInfo();
+                        info.setProductId(item.getProduct().getProductId());
+                        info.setQuantity(item.getQuantity());
+                        info.setPrice(item.getPrice());
+                        info.setProductName(item.getProduct().getName());
+                        return info;
+                    })
+                    .collect(Collectors.toList()));
+        } else {
+            dto.setOrderItems(Collections.emptyList());
+        }
+
+        return dto;
     }
 }
-
-
-

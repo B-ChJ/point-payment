@@ -24,6 +24,8 @@ public class PaymentRequestDto {
     // 결제 정보
     private String paymentMethod;
     private String impUid;
+
+    private boolean usePoint;
     
     // 사용자 정보 (선택적)
     private String customerName;

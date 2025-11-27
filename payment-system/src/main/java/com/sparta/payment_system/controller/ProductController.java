@@ -2,7 +2,6 @@ package com.sparta.payment_system.controller;
 
 import com.sparta.payment_system.dto.product.ProductCreateRequestDto;
 import com.sparta.payment_system.dto.product.ProductCreateResponseDto;
-import com.sparta.payment_system.entity.Product;
 import com.sparta.payment_system.repository.ProductRepository;
 import com.sparta.payment_system.service.ProductService;
 import jakarta.validation.Valid;
@@ -10,10 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Optional;
-
 @RestController
-@RequestMapping("/api/product")
+@RequestMapping("/api/products")
 @RequiredArgsConstructor
 public class ProductController {
 
@@ -27,12 +24,11 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProduct(@PathVariable Long id) {
-        Optional<Product> product = productRepository.findById(id);
-
-        return product.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ProductCreateResponseDto> getProduct(@PathVariable Long id) {
+        ProductCreateResponseDto result = productService.getProductInfo(id);
+        return ResponseEntity.ok(result);
     }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productRepository.deleteById(id);
