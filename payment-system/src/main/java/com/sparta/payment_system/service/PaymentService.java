@@ -15,12 +15,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-/**
- * 결제 플로우 전반을 관리하고 비즈니스 로직을 처리하는 서비스입니다.
- */
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -33,15 +29,7 @@ public class PaymentService {
     private final PortOneClient portOneClient;
 
 
-    /**
-     * 외부 결제를 위해 결제 준비 정보를 생성하고 저장합니다.
-     * 재고, 포인트 사용을 검증하여 최종 결제 금액을 확정합니다.
-     *
-     * @param userId 사용자 ID
-     * @param orderId 주문 ID
-     * @param requestDto 결제 요청 DTO (포인트 사용 여부)
-     * @return PortOne 결제 준비 응답 DTO
-     */
+    // 1. 결제 생성 (Ready API)
     @Transactional
     public PortOnePaymentReadyResponseDto createPaymentReady(
             Long userId,
@@ -55,10 +43,12 @@ public class PaymentService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("주문을 찾을 수 없습니다."));
 
+        // 1. 현재 사용자가 주문의 소유자인지 확인
         if (!order.getUserId().equals(userId)) {
             throw new SecurityException("해당 주문에 대한 결제 권한이 없습니다.");
         }
 
+        // 2. 재고 사전 확인
         for (OrderItem item : order.getOrderItems()) {
             if (item.getProduct().getStock() < item.getQuantity()) {
                 throw new IllegalStateException("재고 부족: " + item.getProduct().getName());
@@ -69,30 +59,19 @@ public class PaymentService {
         BigDecimal pointsUsed = BigDecimal.ZERO;
         BigDecimal finalPaymentAmount = totalAmount;
 
+        // 3. 포인트 사용 로직
         if (requestDto.isUsePoint()) {
+            // 포인트 사용 검증 로직은 기존과 동일
             pointsUsed = user.getTotalPoints().min(totalAmount);
             finalPaymentAmount = totalAmount.subtract(pointsUsed);
         }
 
-
-        Optional<Payment> existingPayment = paymentRepository.findByOrder_OrderId(orderId);
-
-        Payment payment;
-        if (existingPayment.isPresent()) {
-
-            payment = existingPayment.get();
-        } else {
-            payment = new Payment();
-            payment.setOrder(order);
-        }
-
+        Payment payment = new Payment();
+        payment.setOrder(order);
         payment.setAmount(finalPaymentAmount);
         payment.setPointsUsed(pointsUsed);
         payment.setDiscountAmount(BigDecimal.ZERO);
-
-
         payment.setStatus(Payment.PaymentStatus.FAILED);
-
         payment.setMethodId(Payment.PaymentMethod.CARD.getId());
 
         String newPaymentKey = "T" + System.currentTimeMillis() + orderId;
@@ -100,11 +79,13 @@ public class PaymentService {
 
         Payment savedPayment = paymentRepository.save(payment);
 
+
         PortOnePaymentReadyResponseDto readyInfo = new PortOnePaymentReadyResponseDto();
         readyInfo.setPaymentId(savedPayment.getPaymentId());
         readyInfo.setPaymentKey(newPaymentKey);
         readyInfo.setAmount(finalPaymentAmount);
 
+        // 주문 이름 설정
         String orderName = order.getOrderItems().get(0).getProduct().getName();
         if (order.getOrderItems().size() > 1) {
             orderName += " 외 " + (order.getOrderItems().size() - 1) + "건";
@@ -114,14 +95,7 @@ public class PaymentService {
         return readyInfo;
     }
 
-    /**
-     * PortOne과 최종 검증 후, 결제 완료 후처리를 진행합니다.
-     * 재고 차감, 포인트 처리, 주문 상태 변경, 멤버십 업데이트를 포함합니다.
-     *
-     * @param paymentKey PortOne 결제 고유 키
-     * @param currentUserId 현재 사용자 ID
-     * @return 결제 완료 응답 DTO
-     */
+    // 2. 결제 완료 처리
     @Transactional
     public PaymentResponseDto completePaymentVerification(String paymentKey , Long currentUserId) {
 
@@ -136,10 +110,12 @@ public class PaymentService {
         }
 
 
+        // 이미 완료된 경우, 불필요한 재처리 방지
         if (payment.getStatus() == Payment.PaymentStatus.PAID) {
             return convertToPaymentResponseDto(payment, user, user.getMembershipRank().name(), user.getMembershipRank().name());
         }
 
+        // PortOne 결제 검증 (금액 일치 확인)
         PaymentVerificationDto verification = portOneClient.getPayment(payment.getPaymentKey());
 
         if (!"Paid".equalsIgnoreCase(verification.getStatus())) {
@@ -159,22 +135,18 @@ public class PaymentService {
 
         processPostPaymentActions(payment, payment.getOrder(), user);
 
+        // 내부 상태 업데이트 및 후처리
         payment.setStatus(Payment.PaymentStatus.PAID);
         payment.setPaidAt(LocalDateTime.now());
         paymentRepository.save(payment);
 
+        // 이전 랭크 정보가 없으면, 현재 랭크로 설정하여 반환
         return convertToPaymentResponseDto(payment, user, prevRank, user.getMembershipRank().name());
     }
 
-    /**
-     * 특정 결제 내역의 상세 정보를 조회합니다.
-     *
-     * @param paymentId 결제 ID
-     * @param currentUserId 현재 사용자 ID
-     * @return 결제 응답 DTO
-     */
+    // 3. 결제 내역 조회
     @Transactional(readOnly = true)
-    public PaymentResponseDto getPaymentDetails(Long paymentId, Long currentUserId) {
+    public PaymentResponseDto getPaymentDetails(Long paymentId, Long currentUserId) { // 🌟 메서드 이름 변경 및 userId 추가
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new IllegalArgumentException("Invalid paymentId: " + paymentId));
         User user = getUserByPayment(payment);
@@ -187,11 +159,7 @@ public class PaymentService {
         return convertToPaymentResponseDto(payment, user, user.getMembershipRank().name(), user.getMembershipRank().name());
     }
 
-    /**
-     * 특정 결제를 실패 상태로 처리하고, 관련된 주문을 취소 상태로 변경합니다.
-     *
-     * @param paymentKey 결제 고유 키
-     */
+    //결제실패 처리 (기존 로직 유지)
     @Transactional
     public void failPaymentByPaymentKey(String paymentKey) {
         Payment payment = getPaymentByPaymentKey(paymentKey);
@@ -202,6 +170,7 @@ public class PaymentService {
 
         payment.setStatus(Payment.PaymentStatus.FAILED);
 
+        // 실패 시 주문 상태 동기화
         Order order = payment.getOrder();
         if (order != null) {
             order.setStatus(Order.OrderStatus.CANCELLED);
@@ -212,6 +181,7 @@ public class PaymentService {
     }
 
     private void processPostPaymentActions(Payment payment, Order order, User user) {
+        // 1. 주문 상태 동기화 및 재고 실차감 (기존 로직 유지)
         order.setStatus(Order.OrderStatus.COMPLETED);
         orderRepository.save(order);
 
@@ -223,6 +193,7 @@ public class PaymentService {
             productRepository.save(product);
         }
 
+        // 2. 포인트 사용 차감 및 적립
         if (payment.getPointsUsed().compareTo(BigDecimal.ZERO) > 0) {
             user.setTotalPoints(user.getTotalPoints().subtract(payment.getPointsUsed()));
             createPointTransaction(user, payment.getPointsUsed(), PointTransaction.PointType.USED);
@@ -234,12 +205,15 @@ public class PaymentService {
         }
         userRepository.save(user);
 
+        // 3. 멤버십 업데이트
         updateMembershipLevel(user);
     }
+
 
     private User getUserByPayment(Payment payment) {
         Order order = payment.getOrder();
         if (order == null) throw new IllegalArgumentException("Payment has no associated order");
+        // 🌟 userId를 통해 사용자 조회
         return userRepository.findById(order.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("Invalid userId"));
     }
@@ -293,6 +267,7 @@ public class PaymentService {
 
         PaymentResponseDto dto = new PaymentResponseDto();
 
+        // 1. 기본 정보
         dto.setPaymentId(payment.getPaymentId() != null ? payment.getPaymentId().toString() : null);
         dto.setOrderId(payment.getOrder() != null ? payment.getOrder().getOrderId().toString() : null);
         dto.setUserId(user.getUserId());
@@ -301,15 +276,19 @@ public class PaymentService {
         dto.setCreatedAt(payment.getCreatedAt());
         dto.setUpdatedAt(payment.getUpdatedAt());
 
+        // 2. 포인트 정보
         dto.setUsePoint(payment.getPointsUsed().compareTo(BigDecimal.ZERO) > 0);
         dto.setUsedPointAmount(payment.getPointsUsed());
+        // 적립 포인트는 완료 단계에서만 계산 가능 (생성 단계라면 0)
         dto.setEarnedPointAmount(payment.getStatus() == Payment.PaymentStatus.PAID ?
                 payment.getAmount().multiply(new BigDecimal("0.01")) : BigDecimal.ZERO);
         dto.setFinalPointBalance(user.getTotalPoints());
 
+        // 3. 멤버십 정보
         dto.setPreviousMembershipRank(previousMembershipRank);
         dto.setUpdatedMembershipRank(updatedMembershipRank);
 
+        // 4. 주문 상품 정보 매핑
         if (payment.getOrder() != null && payment.getOrder().getOrderItems() != null) {
             dto.setOrderItems(payment.getOrder().getOrderItems().stream()
                     .map(item -> {
